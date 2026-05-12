@@ -1,0 +1,20 @@
+{
+  "name": "tree-sitter-expo",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for the Expo programming language",
+  "main": "bindings/node",
+  "keywords": [
+    "parser",
+    "tree-sitter",
+    "expo"
+  ],
+  "author": "Henry Popp <hello@hpopp.dev>",
+  "license": "MIT",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.24.7"
+  }
+}
