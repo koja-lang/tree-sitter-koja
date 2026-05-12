@@ -98,25 +98,44 @@ module.exports = grammar({
   ],
 
   conflicts: ($) => [
-    [$.function_declaration, $.extern_function_declaration],
-    [$.priv_function, $.extern_function_declaration],
+    // ─── Block boundaries ──────────────────────────────────────────
+    // At each `_newline` inside a block, the parser must decide
+    // whether to continue with another statement or reduce the
+    // block so the surrounding `end` / `else` / next match arm can
+    // take over. The self-conflict lets GLR explore both paths;
+    // lookahead settles it.
+    [$.block],
+
+    // ─── Function & closure ambiguities ────────────────────────────
+    // `fn name(...)` is structurally ambiguous: `(...)` could be the
+    // parameter list of a function declaration or the start of the
+    // body's first expression (`(x) -> y` short closure, `()` unit).
+    // The dynamic precedence on `parameters` makes the function-
+    // signature interpretation win once GLR has explored both.
+    [$.parameters, $._closure_params_short],
+    [$.parameters, $.unit_literal],
     [$._closure_params_short, $.unit_literal],
     [$._closure_params_short, $.unit_type],
     [$.parameter, $.closure_param],
     [$.closure_param, $._primary_expr],
+    // Bodyless `@extern` / `@intrinsic` declarations overlap with
+    // their full-body counterparts until an `end` clarifies. The
+    // dynamic precedences (`+10` on full forms, `-10` on extern)
+    // pick the right one.
+    [$.function_declaration, $.extern_function_declaration],
+    [$.priv_function, $.extern_function_declaration],
+    // Protocol methods come in bodyless signature and full
+    // (default-impl) flavours. Same pattern as above.
+    [$.protocol_method],
+
+    // ─── Type vs expression ambiguities ────────────────────────────
+    // A bare `Foo` could be a named type or the head of an
+    // expression (constructor / enum path / method call on type).
+    // After a `type_identifier`, a following `.` extends the path
+    // for either the named-type, enum-construction, or postfix-
+    // method-call interpretation; lookahead beyond the path picks.
     [$.named_type, $._primary_expr],
-    // After a `type_identifier`, a following `.` could continue a
-    // `named_type` path, an `_enum_construction_path`, or be the
-    // start of a postfix `.method(...)` / `.field` on the bare type.
-    // Let GLR explore all three; whichever matches the rest of the
-    // input wins.
     [$.named_type, $._primary_expr, $._enum_construction_path],
-    // `fn name(...)` is ambiguous: `(...)` could be parameters or the
-    // start of the body's first expression (short-closure or unit
-    // literal). GLR explores both; the dynamic precedence on
-    // `parameters` makes the parameter interpretation win.
-    [$.parameters, $._closure_params_short],
-    [$.parameters, $.unit_literal],
   ],
 
   supertypes: ($) => [
@@ -290,27 +309,17 @@ module.exports = grammar({
         $.protocol_method,
       ),
 
-    // Protocol methods are either bodyless signatures
-    // (`fn name(...) -> Type`) or default implementations
-    // (`fn name(...) ... end`). Tree-sitter can't decide which form
-    // we're in until the trailing `end` arrives, so the ambiguity is
-    // listed in `conflicts` and resolved via GLR exploration.
+    // Protocol methods come in two flavours: bodyless signatures
+    // (`fn name(...) -> Type`) and default implementations with a
+    // trailing `end`. We split them into explicit alternatives so the
+    // bodyless form can't accidentally swallow the *next* method's
+    // body or the surrounding protocol's `end`. GLR (via the
+    // conflicts list) explores both; dynamic precedence prefers the
+    // with-body form when an `end` is reachable.
     protocol_method: ($) =>
-      prec.right(
-        seq(
-          "fn",
-          field("name", $.identifier),
-          optional(field("type_parameters", $.type_parameters)),
-          optional(field("parameters", $.parameters)),
-          optional(field("return_type", $.return_type)),
-          optional(
-            seq(
-              optional($._newline),
-              optional(field("body", $.block)),
-              "end",
-            ),
-          ),
-        ),
+      choice(
+        prec.dynamic(10, seq(...fnHeader($), ...blockBody($), "end")),
+        prec.dynamic(-10, seq(...fnHeader($))),
       ),
 
     // ====================================================================
@@ -339,62 +348,22 @@ module.exports = grammar({
     // 7. Function
     // ====================================================================
 
-    // Function/closure headers: dynamic precedence on parameters and
-    // return_type to prefer those interpretations over a body that
-    // happens to start with `(` (which would otherwise be a
-    // short_closure) or `->` (a parameter-less arrow).
+    // Public function with a body. `prec.dynamic(10)` makes this
+    // interpretation win over the bodyless
+    // `extern_function_declaration` whenever an `end` keyword is
+    // reachable.
     function_declaration: ($) =>
-      prec.dynamic(
-        10,
-        seq(
-          "fn",
-          field("name", $.identifier),
-          optional(field("type_parameters", $.type_parameters)),
-          optional(field("parameters", $.parameters)),
-          optional(field("return_type", $.return_type)),
-          optional($._newline),
-          optional(field("body", $.block)),
-          "end",
-        ),
-      ),
+      prec.dynamic(10, seq(...fnHeader($), ...blockBody($), "end")),
 
     priv_function: ($) =>
-      prec.dynamic(
-        10,
-        seq(
-          "priv",
-          "fn",
-          field("name", $.identifier),
-          optional(field("type_parameters", $.type_parameters)),
-          optional(field("parameters", $.parameters)),
-          optional(field("return_type", $.return_type)),
-          optional($._newline),
-          optional(field("body", $.block)),
-          "end",
-        ),
-      ),
+      prec.dynamic(10, seq("priv", ...fnHeader($), ...blockBody($), "end")),
 
     // Bodyless declaration used under `@extern` / `@intrinsic`. The
-    // negative dynamic precedence makes the full-body
-    // `function_declaration` interpretation win whenever an `end`
-    // keyword follows. The optional `priv` covers stdlib FFI
-    // declarations like `priv fn evp_sha1 -> CPtr<UInt8>`. The
-    // optional newline before `->` mirrors the lexer's continues_line
-    // suppression: when an extern signature wraps the parameter list
-    // across lines, the next significant token is the return arrow.
+    // negative dynamic precedence makes the full-body forms above win
+    // whenever an `end` keyword follows. The optional `priv` covers
+    // stdlib FFI declarations like `priv fn evp_sha1 -> CPtr<UInt8>`.
     extern_function_declaration: ($) =>
-      prec.dynamic(
-        -10,
-        seq(
-          optional("priv"),
-          "fn",
-          field("name", $.identifier),
-          optional(field("type_parameters", $.type_parameters)),
-          optional(field("parameters", $.parameters)),
-          optional($._newline),
-          optional(field("return_type", $.return_type)),
-        ),
-      ),
+      prec.dynamic(-10, seq(optional("priv"), ...fnHeader($))),
 
     return_type: ($) => seq("->", $._type_expression),
 
@@ -540,21 +509,19 @@ module.exports = grammar({
     // 10. Block / statements
     // ====================================================================
 
-    // We want `block` to greedily absorb `_newline _statement` runs,
-    // but lose to `match_arm` whenever the next chunk could also be a
-    // new arm. `prec.right` resolves the basic shift/reduce in favour
-    // of "extend the block"; the conflict declaration on
-    // `[$.block, $.match_arm]` then lets the higher dynamic
-    // precedence on `match_arm` flip that decision when both parses
-    // are completable.
+    // A block is one or more statements separated by newlines, with
+    // an optional trailing newline. The trailing newline is what
+    // gives the parser a reduce path when an `end` (or similar
+    // closer) follows; without it tree-sitter ends up emitting `end`
+    // as an identifier and the block runs off the rails. Statement
+    // separators are declared as a conflict (`[$.block]`) so GLR can
+    // simultaneously explore "extend the block" and "stop here" —
+    // this keeps multi-statement bodies working inside `match` arms.
     block: ($) =>
-      prec.right(
-        1,
-        seq(
-          $._statement,
-          repeat(seq($._newline, $._statement)),
-          optional($._newline),
-        ),
+      seq(
+        $._statement,
+        repeat(seq($._newline, $._statement)),
+        optional($._newline),
       ),
 
     _statement: ($) =>
@@ -649,14 +616,25 @@ module.exports = grammar({
         ),
       ),
 
+    // The lexer's `continues_line` rule already suppresses newlines
+    // *after* `?` and `:`, so multi-line ternaries with the
+    // operators at end-of-line work without grammar help. The
+    // start-of-line style (`cond\n  ? a\n  : b`) would require a
+    // newline *before* `?`, which fundamentally collides with
+    // statement termination at assignment scope and explodes the
+    // conflict graph; we accept that style as a parse error and
+    // rely on tree-sitter's error recovery to keep the rest of the
+    // file highlighted.
     ternary_expression: ($) =>
       prec.right(
         PREC.ternary,
         seq(
           field("condition", $._expression),
           "?",
+          optional($._newline),
           field("consequence", $._expression),
           ":",
+          optional($._newline),
           field("alternative", $._expression),
         ),
       ),
@@ -904,8 +882,7 @@ module.exports = grammar({
         optional($._newline),
         ")",
         optional(field("return_type", $.return_type)),
-        optional($._newline),
-        optional(field("body", $.block)),
+        ...blockBody($),
         "end",
       ),
 
@@ -917,22 +894,13 @@ module.exports = grammar({
       seq(
         "if",
         field("condition", $._expression),
-        optional($._newline),
-        optional(field("then", $.block)),
-        optional(
-          seq("else", optional($._newline), optional(field("else", $.block))),
-        ),
+        ...blockBody($, "then"),
+        optional(seq("else", ...blockBody($, "else"))),
         "end",
       ),
 
     unless_expression: ($) =>
-      seq(
-        "unless",
-        field("condition", $._expression),
-        optional($._newline),
-        optional(field("body", $.block)),
-        "end",
-      ),
+      seq("unless", field("condition", $._expression), ...blockBody($), "end"),
 
     match_expression: ($) =>
       seq(
@@ -943,23 +911,25 @@ module.exports = grammar({
         "end",
       ),
 
-    // Dynamic precedence pushes the parser toward starting a new
-    // match arm rather than extending the previous arm's body to
-    // swallow the next pattern as another statement.
     match_arm: ($) =>
-      prec.dynamic(
-        5,
-        seq(
-          field("pattern", $.or_pattern),
-          optional(seq("when", field("guard", $._expression))),
-          "->",
-          field("body", $._match_body),
-        ),
+      seq(
+        field("pattern", $.or_pattern),
+        optional(seq("when", field("guard", $._expression))),
+        "->",
+        field("body", $._match_body),
       ),
 
+    // The trailing newline between an arm body's last statement and
+    // the next arm (or the closing `end`) is consumed by the parent
+    // `match_expression` / `cond_expression` loop, so this body
+    // doesn't include one of its own.
     _match_body: ($) => seq(optional($._newline), $.block),
 
-    or_pattern: ($) => seq($._pattern, repeat(seq("|", $._pattern))),
+    // `|` between patterns is a binary-operator-style separator: the
+    // lexer's continues_line suppression lets the pattern wrap onto
+    // the next line, so we accept an optional newline after `|`.
+    or_pattern: ($) =>
+      seq($._pattern, repeat(seq("|", optional($._newline), $._pattern))),
 
     cond_expression: ($) =>
       seq(
@@ -985,27 +955,14 @@ module.exports = grammar({
         field("pattern", $._pattern),
         "in",
         field("iterable", $._expression),
-        optional($._newline),
-        optional(field("body", $.block)),
+        ...blockBody($),
         "end",
       ),
 
-    loop_expression: ($) =>
-      seq(
-        "loop",
-        optional($._newline),
-        optional(field("body", $.block)),
-        "end",
-      ),
+    loop_expression: ($) => seq("loop", ...blockBody($), "end"),
 
     while_expression: ($) =>
-      seq(
-        "while",
-        field("condition", $._expression),
-        optional($._newline),
-        optional(field("body", $.block)),
-        "end",
-      ),
+      seq("while", field("condition", $._expression), ...blockBody($), "end"),
 
     receive_expression: ($) =>
       seq(
@@ -1016,8 +973,7 @@ module.exports = grammar({
           seq(
             "after",
             field("timeout", $._expression),
-            optional($._newline),
-            optional(field("after_body", $.block)),
+            ...blockBody($, "after_body"),
           ),
         ),
         "end",
@@ -1251,10 +1207,48 @@ module.exports = grammar({
     // are either a bare `#` (longest-match rules out interpolation
     // because `#{` is a longer literal) or `#` followed by a non-`{`
     // continuation.
-    comment: ($) =>
-      token(choice("#", seq("#", /[^{\n][^\n]*/))),
+    comment: ($) => token(choice("#", seq("#", /[^{\n][^\n]*/))),
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// Grammar helpers
+// ─────────────────────────────────────────────────────────────────────
+
+// `fn name[<T>][(p)] [-> R]` — the prefix shared by every function-
+// like declaration form (function_declaration, priv_function,
+// extern_function_declaration, protocol_method). Returns an array of
+// grammar fragments meant to be spread into the calling `seq(...)`
+// call so the resulting state machine is flat (nested `seq` nodes
+// can confuse tree-sitter's GLR exploration).
+//
+// The optional newline between `(...)` and `->` mirrors the
+// reference lexer's `continues_line` rule (see expo-lexer) and lets
+// long signatures wrap before the return arrow.
+function fnHeader($) {
+  return [
+    "fn",
+    field("name", $.identifier),
+    optional(field("type_parameters", $.type_parameters)),
+    optional(field("parameters", $.parameters)),
+    optional($._newline),
+    optional(field("return_type", $.return_type)),
+  ];
+}
+
+// `[\n] [field=block] [\n]` — the tail used before any closer
+// (`end`, `else`, ...) on block-bearing constructs. `block`
+// deliberately does not consume its own trailing newline (see the
+// comment on the `block` rule), so this helper is the canonical way
+// to bridge between a block's last statement and the closing
+// keyword in the surrounding rule. Returns an array (see `fnHeader`).
+function blockBody($, fieldName = "body") {
+  return [
+    optional($._newline),
+    optional(field(fieldName, $.block)),
+    optional($._newline),
+  ];
+}
 
 function commaSep(sep, rule) {
   return optional(commaSep1(sep, rule));
