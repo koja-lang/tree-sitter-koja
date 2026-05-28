@@ -42,6 +42,7 @@ const RESERVED = [
   "else",
   "end",
   "enum",
+  "extend",
   "false",
   "fn",
   "for",
@@ -165,6 +166,7 @@ module.exports = grammar({
         $.enum_declaration,
         $.protocol_declaration,
         $.impl_block,
+        $.extend_block,
         $.function_declaration,
         $.priv_function,
         $.const_declaration,
@@ -323,14 +325,27 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 6. Impl
+    // 6. Impl and Extend
     // ====================================================================
 
+    // `impl Trait for Target` — protocol conformance only. Bare
+    // `impl Target` is not supported; users write `extend Target`
+    // for inherent methods (see `extend_block` below).
     impl_block: ($) =>
       seq(
         "impl",
+        field("trait", $._type_expression),
+        "for",
         field("target", $._type_expression),
-        optional(seq("for", field("trait", $._type_expression))),
+        optional($._newline),
+        repeat(seq($._impl_member, optional($._newline))),
+        "end",
+      ),
+
+    extend_block: ($) =>
+      seq(
+        "extend",
+        field("target", $._type_expression),
         optional($._newline),
         repeat(seq($._impl_member, optional($._newline))),
         "end",
