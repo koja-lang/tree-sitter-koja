@@ -1,9 +1,9 @@
 /**
- * tree-sitter-expo
+ * tree-sitter-koja
  * -----------------
- * Tree-sitter grammar for the Expo programming language.
- * Authored from `../expo/grammar.ebnf` and the reference
- * implementation in `../expo/crates/expo-parser/`.
+ * Tree-sitter grammar for the Koja programming language.
+ * Authored from `../koja/grammar.ebnf` and the reference
+ * implementation in `../koja/crates/koja-parser/`.
  *
  * Conventions:
  *   - Snake_case node names match the EBNF rule names where possible
@@ -31,7 +31,7 @@ const PREC = {
   type_args: 11,
 };
 
-// Keywords that are reserved per `expo/grammar.ebnf` § 18.
+// Keywords that are reserved per `koja/grammar.ebnf` § 18.
 const RESERVED = [
   "after",
   "alias",
@@ -81,7 +81,7 @@ const TYPE_IDENT = /[A-Z][a-zA-Z0-9_]*/;
 const FORMAT_SPEC = /[a-zA-Z0-9.<>^+\-0]+/;
 
 module.exports = grammar({
-  name: "expo",
+  name: "koja",
 
   word: ($) => $.identifier,
 
@@ -592,7 +592,7 @@ module.exports = grammar({
     _lvalue: ($) => choice($.identifier, $.field_access, "self"),
 
     // ====================================================================
-    // 11. Expressions (precedence climbing matches expo-parser)
+    // 11. Expressions (precedence climbing matches koja-parser)
     // ====================================================================
 
     _expression: ($) =>
@@ -1238,7 +1238,7 @@ module.exports = grammar({
 // can confuse tree-sitter's GLR exploration).
 //
 // The optional newline between `(...)` and `->` mirrors the
-// reference lexer's `continues_line` rule (see expo-lexer) and lets
+// reference lexer's `continues_line` rule (see koja-lexer) and lets
 // long signatures wrap before the return arrow.
 function fnHeader($) {
   return [

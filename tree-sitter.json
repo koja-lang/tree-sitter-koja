@@ -1,12 +1,12 @@
 {
   "grammars": [
     {
-      "name": "expo",
-      "camelcase": "Expo",
-      "scope": "source.expo",
+      "name": "koja",
+      "camelcase": "Koja",
+      "scope": "source.koja",
       "path": ".",
       "file-types": [
-        "expo"
+        "koja"
       ],
       "highlights": "queries/highlights.scm"
     }
@@ -14,7 +14,7 @@
   "metadata": {
     "version": "0.1.0",
     "license": "MIT",
-    "description": "Tree-sitter grammar for the Expo programming language",
+    "description": "Tree-sitter grammar for the Koja programming language",
     "authors": [
       {
         "name": "Henry Popp",
@@ -22,7 +22,7 @@
       }
     ],
     "links": {
-      "repository": "https://github.com/tree-sitter/tree-sitter-expo"
+      "repository": "https://github.com/hpopp/tree-sitter-koja"
     }
   },
   "bindings": {

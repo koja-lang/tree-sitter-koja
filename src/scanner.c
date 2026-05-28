@@ -1,4 +1,4 @@
-// External scanner for tree-sitter-expo.
+// External scanner for tree-sitter-koja.
 //
 // Emits four context-sensitive tokens:
 //   _newline           significant statement terminator
@@ -11,7 +11,7 @@
 //   * Newlines are emitted only when the parser asks for one (i.e. when
 //     `_newline` is in `valid_symbols`). The scanner consumes any number of
 //     blank lines and surrounding whitespace before deciding to emit.
-//     This mirrors the suppression rules in `expo/crates/expo-lexer/`:
+//     This mirrors the suppression rules in `koja/crates/koja-lexer/`:
 //     because the grammar consumes `_newline` only at statement boundaries,
 //     newlines that appear after operators / commas / inside parentheses
 //     are simply skipped via `extras`.
@@ -34,14 +34,14 @@ enum TokenType {
   MSTRING_CLOSE,
 };
 
-void *tree_sitter_expo_external_scanner_create(void) { return NULL; }
-void tree_sitter_expo_external_scanner_destroy(void *payload) { (void)payload; }
-unsigned tree_sitter_expo_external_scanner_serialize(void *payload, char *buffer) {
+void *tree_sitter_koja_external_scanner_create(void) { return NULL; }
+void tree_sitter_koja_external_scanner_destroy(void *payload) { (void)payload; }
+unsigned tree_sitter_koja_external_scanner_serialize(void *payload, char *buffer) {
   (void)payload;
   (void)buffer;
   return 0;
 }
-void tree_sitter_expo_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
+void tree_sitter_koja_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
   (void)payload;
   (void)buffer;
   (void)length;
@@ -189,7 +189,7 @@ static bool scan_mstring_close(TSLexer *lexer) {
   return true;
 }
 
-bool tree_sitter_expo_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
+bool tree_sitter_koja_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
   (void)payload;
 
   // Inside a string body the relevant tokens are *_content / *_close.

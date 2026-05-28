@@ -1,12 +1,12 @@
 {
-  "name": "tree-sitter-expo",
+  "name": "tree-sitter-koja",
   "version": "0.1.0",
-  "description": "Tree-sitter grammar for the Expo programming language",
+  "description": "Tree-sitter grammar for the Koja programming language",
   "main": "bindings/node",
   "keywords": [
     "parser",
     "tree-sitter",
-    "expo"
+    "koja"
   ],
   "author": "Henry Popp <hello@hpopp.dev>",
   "license": "MIT",
