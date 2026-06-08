@@ -51,7 +51,6 @@ const RESERVED = [
   "in",
   "loop",
   "match",
-  "move",
   "not",
   "priv",
   "protocol",
@@ -154,11 +153,16 @@ module.exports = grammar({
     // 1. Program
     // ====================================================================
 
+    // `.koja` modules contain only declarations; `.kojs` scripts also allow
+    // top-level statements and expressions (the file body is a function body).
+    // Tree-sitter has no parse mode, so the grammar accepts both shapes.
     source_file: ($) =>
       seq(
         optional($._newline),
-        repeat(seq($._top_level_decl, optional($._newline))),
+        repeat(seq($._top_level_item, optional($._newline))),
       ),
+
+    _top_level_item: ($) => choice($._top_level_decl, $._statement),
 
     _top_level_decl: ($) =>
       choice(
@@ -407,15 +411,13 @@ module.exports = grammar({
 
     parameter: ($) =>
       seq(
-        optional(field("mode", "move")),
         field("name", $.identifier),
         ":",
         field("type", $._type_expression),
         optional(seq("=", field("default", $._expression))),
       ),
 
-    self_parameter: ($) =>
-      prec(2, seq(optional(field("mode", "move")), "self")),
+    self_parameter: ($) => prec(2, "self"),
 
     // ====================================================================
     // 8. Type expressions
@@ -449,7 +451,7 @@ module.exports = grammar({
         $._type_expression,
       ),
 
-    fn_type_parameter: ($) => seq(optional("move"), $._type_expression),
+    fn_type_parameter: ($) => $._type_expression,
 
     generic_type: ($) =>
       prec(
@@ -625,7 +627,6 @@ module.exports = grammar({
       choice(
         $.wildcard,
         seq(
-          optional("move"),
           field("name", $.identifier),
           optional(seq(":", field("type", $._type_expression))),
         ),

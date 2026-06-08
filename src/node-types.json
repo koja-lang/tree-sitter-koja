@@ -1977,16 +1977,6 @@
           }
         ]
       },
-      "mode": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "move",
-            "named": false
-          }
-        ]
-      },
       "name": {
         "multiple": false,
         "required": true,
@@ -2278,18 +2268,7 @@
   {
     "type": "self_parameter",
     "named": true,
-    "fields": {
-      "mode": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "move",
-            "named": false
-          }
-        ]
-      }
-    }
+    "fields": {}
   },
   {
     "type": "short_closure",
@@ -2338,6 +2317,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "_statement",
+          "named": true
+        },
         {
           "type": "_top_level_decl",
           "named": true
@@ -2949,7 +2932,8 @@
   },
   {
     "type": "comment",
-    "named": true
+    "named": true,
+    "extra": true
   },
   {
     "type": "cond",
@@ -3025,10 +3009,6 @@
   },
   {
     "type": "match",
-    "named": false
-  },
-  {
-    "type": "move",
     "named": false
   },
   {

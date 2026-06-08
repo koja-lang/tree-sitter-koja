@@ -6,7 +6,8 @@
       "scope": "source.koja",
       "path": ".",
       "file-types": [
-        "koja"
+        "koja",
+        "kojs"
       ],
       "highlights": "queries/highlights.scm"
     }
