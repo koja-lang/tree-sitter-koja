@@ -87,10 +87,11 @@ module.exports = grammar({
   // Whitespace and comments are skipped everywhere; newlines are NOT in
   // extras because they are significant statement terminators handled by
   // the external scanner.
-  extras: ($) => [/[ \t\r]+/, $.comment],
+  extras: ($) => [/[ \t\r]+/, $.comment, $._line_continuation],
 
   externals: ($) => [
     $._newline,
+    $._line_continuation,
     $._string_content,
     $._mstring_content,
     $._string_close,
@@ -571,11 +572,12 @@ module.exports = grammar({
           optional($._newline),
           field("value", $._expression),
         ),
-        // Plain assignment: `lvalue = expr`
+        // Plain assignment: `lvalue = expr`. A wildcard target
+        // (`_ = expr`) discards the value.
         prec(
           1,
           seq(
-            field("target", $._lvalue),
+            field("target", choice($._lvalue, $.wildcard)),
             "=",
             optional($._newline),
             field("value", $._expression),
@@ -632,15 +634,11 @@ module.exports = grammar({
         ),
       ),
 
-    // The lexer's `continues_line` rule already suppresses newlines
-    // *after* `?` and `:`, so multi-line ternaries with the
-    // operators at end-of-line work without grammar help. The
-    // start-of-line style (`cond\n  ? a\n  : b`) would require a
-    // newline *before* `?`, which fundamentally collides with
-    // statement termination at assignment scope and explodes the
-    // conflict graph; we accept that style as a parse error and
-    // rely on tree-sitter's error recovery to keep the rest of the
-    // file highlighted.
+    // The scanner suppresses newlines after `?` and `:` (mirroring the
+    // lexer's `continues_line` rule) *and* before `?` / `:` / `.`
+    // (lookahead suppression), so both ternary styles -- operators at
+    // end-of-line and at start-of-line -- parse without grammar-level
+    // newline handling.
     ternary_expression: ($) =>
       prec.right(
         PREC.ternary,
@@ -1116,9 +1114,12 @@ module.exports = grammar({
         ">>",
       ),
 
+    // The wildcard value form only makes sense in patterns (`<<_::8>>`),
+    // but the segment rule is shared with literals; accepting the
+    // superset keeps the grammar simple.
     binary_segment: ($) =>
       seq(
-        field("value", $._expression),
+        field("value", choice($.wildcard, $._expression)),
         optional(
           choice(
             seq(":", field("type", $._type_expression)),

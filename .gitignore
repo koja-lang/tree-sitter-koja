@@ -1,4 +1,9 @@
-node_modules/
-build/
-*.log
 .DS_Store
+*.log
+build/
+node_modules/
+
+# `tree-sitter build` outputs
+*.dylib
+*.so
+*.wasm

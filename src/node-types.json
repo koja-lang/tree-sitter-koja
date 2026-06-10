@@ -510,6 +510,10 @@
           {
             "type": "self",
             "named": false
+          },
+          {
+            "type": "wildcard",
+            "named": true
           }
         ]
       },
@@ -692,6 +696,10 @@
         "types": [
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "wildcard",
             "named": true
           }
         ]
@@ -2932,8 +2940,7 @@
   },
   {
     "type": "comment",
-    "named": true,
-    "extra": true
+    "named": true
   },
   {
     "type": "cond",

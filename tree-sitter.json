@@ -5,10 +5,7 @@
       "camelcase": "Koja",
       "scope": "source.koja",
       "path": ".",
-      "file-types": [
-        "koja",
-        "kojs"
-      ],
+      "file-types": ["koja", "kojs"],
       "highlights": "queries/highlights.scm"
     }
   ],
@@ -23,7 +20,7 @@
       }
     ],
     "links": {
-      "repository": "https://github.com/hpopp/tree-sitter-koja"
+      "repository": "https://github.com/koja-lang/tree-sitter-koja"
     }
   },
   "bindings": {

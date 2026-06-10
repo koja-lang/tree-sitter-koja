@@ -1,11 +1,15 @@
 // External scanner for tree-sitter-koja.
 //
-// Emits four context-sensitive tokens:
-//   _newline           significant statement terminator
-//   _string_content    a non-empty run of regular characters inside "..."
-//   _mstring_content   a non-empty run of regular characters inside """..."""
-//   _string_close      closing `"` of a single-line string
-//   _mstring_close     closing `"""` of a multiline string
+// Emits these context-sensitive tokens:
+//   _newline            significant statement terminator
+//   _line_continuation  zero-width token emitted instead of _newline when
+//                       the next line starts with `.` / `?` / `:` (method
+//                       chain or ternary continuation); discarded by the
+//                       grammar via `extras`
+//   _string_content     a non-empty run of regular characters inside "..."
+//   _mstring_content    a non-empty run of regular characters inside """..."""
+//   _string_close       closing `"` of a single-line string
+//   _mstring_close      closing `"""` of a multiline string
 //
 // Approach:
 //   * Newlines are emitted only when the parser asks for one (i.e. when
@@ -28,6 +32,7 @@
 
 enum TokenType {
   NEWLINE,
+  LINE_CONTINUATION,
   STRING_CONTENT,
   MSTRING_CONTENT,
   STRING_CLOSE,
@@ -75,7 +80,25 @@ static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
     }
     break;
   }
-  if (saw_newline && valid_symbols[NEWLINE]) {
+  if (!saw_newline) {
+    return false;
+  }
+  // Mirror koja-lexer's lookahead suppression: a line that starts with
+  // `.` continues a method chain, and `?` / `:` continue a ternary
+  // (`cond\n  ? a\n  : b`). No statement or expression can *begin* with
+  // those characters, so the newline is whitespace. We can't just return
+  // false here -- tree-sitter would then re-lex from the bare `\n`, which
+  // the internal lexer can't skip -- so we emit a zero-width
+  // LINE_CONTINUATION token that the grammar discards via `extras`.
+  if (lexer->lookahead == '.' || lexer->lookahead == '?' || lexer->lookahead == ':') {
+    if (valid_symbols[LINE_CONTINUATION]) {
+      lexer->result_symbol = LINE_CONTINUATION;
+      lexer->mark_end(lexer);
+      return true;
+    }
+    return false;
+  }
+  if (valid_symbols[NEWLINE]) {
     lexer->result_symbol = NEWLINE;
     lexer->mark_end(lexer);
     return true;

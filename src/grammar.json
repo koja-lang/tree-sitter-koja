@@ -2458,8 +2458,17 @@
                 "type": "FIELD",
                 "name": "target",
                 "content": {
-                  "type": "SYMBOL",
-                  "name": "_lvalue"
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SYMBOL",
+                      "name": "_lvalue"
+                    },
+                    {
+                      "type": "SYMBOL",
+                      "name": "wildcard"
+                    }
+                  ]
                 }
               },
               {
@@ -6034,8 +6043,17 @@
           "type": "FIELD",
           "name": "value",
           "content": {
-            "type": "SYMBOL",
-            "name": "_expression"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "wildcard"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            ]
           }
         },
         {
@@ -6623,62 +6641,35 @@
     {
       "type": "SYMBOL",
       "name": "comment"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_line_continuation"
     }
   ],
   "conflicts": [
-    [
-      "block"
-    ],
-    [
-      "parameters",
-      "_closure_params_short"
-    ],
-    [
-      "parameters",
-      "unit_literal"
-    ],
-    [
-      "_closure_params_short",
-      "unit_literal"
-    ],
-    [
-      "_closure_params_short",
-      "unit_type"
-    ],
-    [
-      "parameter",
-      "closure_param"
-    ],
-    [
-      "closure_param",
-      "_primary_expr"
-    ],
-    [
-      "function_declaration",
-      "extern_function_declaration"
-    ],
-    [
-      "priv_function",
-      "extern_function_declaration"
-    ],
-    [
-      "protocol_method"
-    ],
-    [
-      "named_type",
-      "_primary_expr"
-    ],
-    [
-      "named_type",
-      "_primary_expr",
-      "_enum_construction_path"
-    ]
+    ["block"],
+    ["parameters", "_closure_params_short"],
+    ["parameters", "unit_literal"],
+    ["_closure_params_short", "unit_literal"],
+    ["_closure_params_short", "unit_type"],
+    ["parameter", "closure_param"],
+    ["closure_param", "_primary_expr"],
+    ["function_declaration", "extern_function_declaration"],
+    ["priv_function", "extern_function_declaration"],
+    ["protocol_method"],
+    ["named_type", "_primary_expr"],
+    ["named_type", "_primary_expr", "_enum_construction_path"]
   ],
   "precedences": [],
   "externals": [
     {
       "type": "SYMBOL",
       "name": "_newline"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_line_continuation"
     },
     {
       "type": "SYMBOL",
@@ -6706,6 +6697,5 @@
     "_primary_type",
     "_pattern",
     "_literal"
-  ],
-  "reserved": {}
+  ]
 }

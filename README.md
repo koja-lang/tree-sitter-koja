@@ -1,8 +1,10 @@
 # tree-sitter-koja
 
-A [tree-sitter](https://tree-sitter.github.io) grammar for the [Koja programming language](../koja/).
+A [tree-sitter](https://tree-sitter.github.io) grammar for the [Koja programming language](https://github.com/koja-lang/koja).
 
-The grammar is authored in `grammar.js` and translated mechanically from `../koja/grammar.ebnf`. The generated parser (`src/parser.c`, `src/grammar.json`, `src/node-types.json`, `src/tree_sitter/parser.h`) and the hand-written external scanner (`src/scanner.c`) are committed so consumers can build the grammar without running the tree-sitter CLI.
+The grammar is authored in `grammar.js` and translated mechanically from Koja's [`grammar.ebnf`](https://github.com/koja-lang/koja/blob/main/grammar.ebnf). The generated parser (`src/parser.c`, `src/grammar.json`, `src/node-types.json`, `src/tree_sitter/parser.h`) and the hand-written external scanner (`src/scanner.c`) are committed so consumers can build the grammar without running the tree-sitter CLI.
+
+Standard highlight queries live in `queries/highlights.scm`.
 
 ## Regenerating
 
@@ -13,5 +15,5 @@ npx tree-sitter generate
 
 ## Consumers
 
-- [`koja/editors/zed/koja/`](../koja/editors/zed/koja/) — Zed extension (references this directory via a `file://` git URL plus a pinned commit).
+- [Koja's Zed extension](https://github.com/koja-lang/koja/tree/main/editors/zed/koja) — references this repository with a pinned commit.
 - Future Helix / Neovim / Vim integrations.
