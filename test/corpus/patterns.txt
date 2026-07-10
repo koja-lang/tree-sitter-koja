@@ -1,0 +1,360 @@
+==================
+literal and negative literal patterns
+==================
+
+fn f(x: Int) -> String
+  match x
+    0 -> "zero"
+    -1 -> "neg"
+    _ -> "other"
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (integer))
+            (block
+              (expression_statement
+                (string))))
+          (match_arm
+            (or_pattern
+              (negative_literal_pattern
+                (integer)))
+            (block
+              (expression_statement
+                (string))))
+          (match_arm
+            (or_pattern
+              (wildcard))
+            (block
+              (expression_statement
+                (string)))))))))
+
+==================
+typed binding pattern
+==================
+
+fn f(x: Pet) -> String
+  match x
+    cat: Cat -> cat.name
+    dog: Dog -> dog.name
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (typed_binding_pattern
+                (identifier)
+                (named_type
+                  (type_identifier))))
+            (block
+              (expression_statement
+                (field_access
+                  (identifier)
+                  (identifier)))))
+          (match_arm
+            (or_pattern
+              (typed_binding_pattern
+                (identifier)
+                (named_type
+                  (type_identifier))))
+            (block
+              (expression_statement
+                (field_access
+                  (identifier)
+                  (identifier))))))))))
+
+==================
+enum patterns with two and three path segments
+==================
+
+fn f(reason: Process.StopReason) -> Int
+  match reason
+    StopReason.Normal -> 0
+    Process.StopReason.Shutdown -> 1
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (enum_pattern
+                (type_identifier)
+                (type_identifier)))
+            (block
+              (expression_statement
+                (integer))))
+          (match_arm
+            (or_pattern
+              (enum_pattern
+                (type_identifier)
+                (type_identifier)
+                (type_identifier)))
+            (block
+              (expression_statement
+                (integer)))))))))
+
+==================
+struct pattern
+==================
+
+fn f(p: Point) -> Int
+  match p
+    Point{x: 0, y: y} -> y
+    Point{x: x, y: _} -> x
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (struct_pattern
+                (type_identifier)
+                (field_pattern
+                  (identifier)
+                  (integer))
+                (field_pattern
+                  (identifier)
+                  (binding_pattern
+                    (identifier)))))
+            (block
+              (expression_statement
+                (identifier))))
+          (match_arm
+            (or_pattern
+              (struct_pattern
+                (type_identifier)
+                (field_pattern
+                  (identifier)
+                  (binding_pattern
+                    (identifier)))
+                (field_pattern
+                  (identifier)
+                  (wildcard))))
+            (block
+              (expression_statement
+                (identifier)))))))))
+
+==================
+bare constructor shorthand
+==================
+
+fn f(color: Color) -> Int
+  match color
+    Red -> 0
+    Green(shade) -> shade
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (constructor_pattern
+                (type_identifier)))
+            (block
+              (expression_statement
+                (integer))))
+          (match_arm
+            (or_pattern
+              (constructor_pattern
+                (type_identifier)
+                (binding_pattern
+                  (identifier))))
+            (block
+              (expression_statement
+                (identifier)))))))))
+
+==================
+list pattern
+==================
+
+fn f(items: List<Int>) -> Int
+  match items
+    [] -> 0
+    [head] -> head
+    [a, b] -> a + b
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (list_pattern))
+            (block
+              (expression_statement
+                (integer))))
+          (match_arm
+            (or_pattern
+              (list_pattern
+                (binding_pattern
+                  (identifier))))
+            (block
+              (expression_statement
+                (identifier))))
+          (match_arm
+            (or_pattern
+              (list_pattern
+                (binding_pattern
+                  (identifier))
+                (binding_pattern
+                  (identifier))))
+            (block
+              (expression_statement
+                (binary_expression
+                  (identifier)
+                  (identifier))))))))))
+
+==================
+binary pattern with size and modifiers
+==================
+
+fn f(data: Binary) -> Int
+  match data
+    <<version::8 unsigned big, rest::16>> -> version
+    <<_::8>> -> 0
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (binary_pattern
+                (binary_segment
+                  (identifier)
+                  (integer)
+                  (binary_modifier)
+                  (binary_modifier))
+                (binary_segment
+                  (identifier)
+                  (integer))))
+            (block
+              (expression_statement
+                (identifier))))
+          (match_arm
+            (or_pattern
+              (binary_pattern
+                (binary_segment
+                  (wildcard)
+                  (integer))))
+            (block
+              (expression_statement
+                (integer)))))))))

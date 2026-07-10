@@ -7,18 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2026-07-10
 
-Tracks the syntax of the upcoming Koja release. The grammar remains a strict superset of earlier releases, so all Koja 0.13 sources parse unchanged.
-
 ### Added
 
 - `priv` is now accepted on `struct`, `enum`, `const`, `type`, and `protocol` declarations.
 - A line starting with `and` or `or` now continues the previous expression, matching the formatter's leading-operator style for wrapped boolean chains.
 - `struct` and `enum` declarations accept dotted nested-type names (`struct Process.CrashInfo`).
-- Test corpus covering visibility modifiers and line continuation, plus stdlib parse verification.
 
 ### Fixed
 
 - Enum patterns with multi-segment type paths (`Process.StopReason.Normal`) now parse.
+- Comments now appear in the syntax tree instead of being absorbed by newline handling, so comment highlighting works.
+- A match or cond arm following a multi-statement arm body now parses as a new arm instead of a short closure extending the previous body.
 
 ## [0.1.1] - 2026-06-27
 

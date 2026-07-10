@@ -82,11 +82,17 @@ static bool peek_leading_bool_operator(TSLexer *lexer) {
   return false;
 }
 
-// Consume any number of newlines surrounded by whitespace and `#` line
-// comments. When `valid_symbols[NEWLINE]` is true and we saw at least one
-// `\n`, emit the NEWLINE token; otherwise the newlines are silently
-// dropped (treated as whitespace) and we fall through to the default
-// tokenizer.
+// Consume any number of newlines surrounded by whitespace. When
+// `valid_symbols[NEWLINE]` is true and we saw at least one `\n`, emit the
+// NEWLINE token; otherwise the newlines are silently dropped (treated as
+// whitespace) and we fall through to the default tokenizer.
+//
+// A comment line does not terminate a statement by itself, and the
+// terminator must be emitted after the last comment so a run of comment
+// lines separates two statements with exactly one NEWLINE. When the scan
+// lands on `#` we therefore emit a zero-width LINE_CONTINUATION (an
+// extra the grammar discards), let the internal lexer surface the
+// comment as a `comment` node, and resume the newline scan afterwards.
 static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
   bool saw_newline = false;
   for (;;) {
@@ -98,8 +104,14 @@ static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
       saw_newline = true;
       continue;
     }
-    if (lexer->lookahead == '#') {
-      // Comment: consume to end of line, then loop to absorb the `\n`.
+    if (lexer->lookahead == '#' && saw_newline) {
+      if (valid_symbols[LINE_CONTINUATION]) {
+        lexer->mark_end(lexer);
+        lexer->result_symbol = LINE_CONTINUATION;
+        return true;
+      }
+      // No room for the extra at this state, so absorb the comment the
+      // way the pre-0.2.0 scanner always did and keep scanning.
       while (lexer->lookahead != 0 && lexer->lookahead != '\n') {
         skip(lexer);
       }

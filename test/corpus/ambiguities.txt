@@ -1,0 +1,181 @@
+==================
+unit parameter list versus unit literal body
+==================
+
+fn f()
+  ()
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (expression_statement
+        (unit_literal)))))
+
+==================
+bodyless protocol signature followed by default implementation
+==================
+
+protocol Lifecycle
+  fn stop(self) -> Int
+  fn restart(self) -> Int
+    self.stop()
+  end
+  fn pause(self) -> Int
+end
+
+---
+
+(source_file
+  (protocol_declaration
+    (type_identifier)
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier))))
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (method_call
+            (self_expression)
+            (identifier)
+            (argument_list)))))
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier))))))
+
+==================
+method call on type path versus enum construction
+==================
+
+fn f() -> Int
+  socket = Net.TCPSocket.connect("localhost", 80)
+  reason = Process.StopReason.Normal
+  0
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (method_call
+          (enum_construction
+            (type_identifier)
+            (type_identifier))
+          (identifier)
+          (argument_list
+            (argument
+              (string))
+            (argument
+              (integer)))))
+      (assignment
+        (identifier)
+        (enum_construction
+          (type_identifier)
+          (type_identifier)
+          (type_identifier)))
+      (expression_statement
+        (integer)))))
+
+==================
+match arm body ends flush against next arm and end
+==================
+
+fn f(x: Int) -> Int
+  match x
+    0 ->
+      a = 1
+      a
+    _ ->
+      b = 2
+      b
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (integer))
+            (block
+              (assignment
+                (identifier)
+                (integer))
+              (expression_statement
+                (identifier))))
+          (match_arm
+            (or_pattern
+              (wildcard))
+            (block
+              (assignment
+                (identifier)
+                (integer))
+              (expression_statement
+                (identifier)))))))))
+
+==================
+bare impl without for is rejected
+:error
+==================
+
+impl Point
+  fn x(self) -> Int
+    1
+  end
+end
+
+---
+
+
+
+==================
+struct missing end is rejected
+:error
+==================
+
+struct Point
+  x: Int
+
+---
+
+

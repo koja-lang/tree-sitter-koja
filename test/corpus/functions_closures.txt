@@ -1,0 +1,278 @@
+==================
+generic function with trait bounds
+==================
+
+fn insert<T: Hash & Equality>(item: T) -> Bool
+  true
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (type_parameters
+      (type_parameter
+        (type_identifier)
+        (type_identifier)
+        (type_identifier)))
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (boolean)))))
+
+==================
+default parameter value
+==================
+
+fn greet(name: String, punctuation: String = "!") -> String
+  name <> punctuation
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))
+        (string)))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (identifier)
+          (identifier))))))
+
+==================
+self receiver
+==================
+
+extend Point
+  fn distance(self) -> Int
+    self.x * self.x + self.y * self.y
+  end
+end
+
+---
+
+(source_file
+  (extend_block
+    (named_type
+      (type_identifier))
+    (function_declaration
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (binary_expression
+            (binary_expression
+              (field_access
+                (self_expression)
+                (identifier))
+              (field_access
+                (self_expression)
+                (identifier)))
+            (binary_expression
+              (field_access
+                (self_expression)
+                (identifier))
+              (field_access
+                (self_expression)
+                (identifier)))))))))
+
+==================
+wrapped signature breaks before return arrow
+==================
+
+struct FFI
+  @extern "C"
+  fn very_long_external_call(alpha: Int64, bravo: Int64, charlie: Int64)
+    -> Int64
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (extern_function_declaration
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier)))
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier)))
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier))))
+        (return_type
+          (named_type
+            (type_identifier)))))))
+
+==================
+block closure with return type
+==================
+
+add = fn (a: Int, b: Int) -> Int
+  a + b
+end
+
+---
+
+(source_file
+  (assignment
+    (identifier)
+    (closure
+      (closure_param
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (closure_param
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (binary_expression
+            (identifier)
+            (identifier)))))))
+
+==================
+short closures
+==================
+
+fn apply(f: fn (Int) -> Int, x: Int) -> Int
+  doubled = x -> x * 2
+  summed = (a, b) -> a + b
+  ignored = _ -> 0
+  f(x)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (function_type
+          (fn_type_parameter
+            (named_type
+              (type_identifier)))
+          (named_type
+            (type_identifier))))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (short_closure
+          (closure_param
+            (identifier))
+          (binary_expression
+            (identifier)
+            (integer))))
+      (assignment
+        (identifier)
+        (short_closure
+          (closure_param
+            (identifier))
+          (closure_param
+            (identifier))
+          (binary_expression
+            (identifier)
+            (identifier))))
+      (assignment
+        (identifier)
+        (short_closure
+          (closure_param
+            (wildcard))
+          (integer)))
+      (expression_statement
+        (call
+          (identifier)
+          (argument_list
+            (argument
+              (identifier))))))))
+
+==================
+trailing closure argument
+==================
+
+fn f(list: List<Int>) -> List<Int>
+  list.map(x -> x * 2)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))))
+    (return_type
+      (generic_type
+        (named_type
+          (type_identifier))
+        (type_arguments
+          (named_type
+            (type_identifier)))))
+    (block
+      (expression_statement
+        (method_call
+          (identifier)
+          (identifier)
+          (argument_list
+            (argument
+              (short_closure
+                (closure_param
+                  (identifier))
+                (binary_expression
+                  (identifier)
+                  (integer))))))))))

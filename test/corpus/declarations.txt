@@ -1,0 +1,238 @@
+==================
+struct with defaults and generics
+==================
+
+struct Pair<A, B>
+  first: A
+  second: B
+  tag: Int = 0
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (type_parameters
+      (type_parameter
+        (type_identifier))
+      (type_parameter
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier))
+      (integer))))
+
+==================
+enum with unit, tuple, and struct variants
+==================
+
+enum Shape
+  Empty
+  Circle(Int)
+  Rect(Int, Int)
+  Pixel{x: Int, y: Int}
+end
+
+---
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)
+      (named_type
+        (type_identifier)))
+    (enum_variant
+      (type_identifier)
+      (named_type
+        (type_identifier))
+      (named_type
+        (type_identifier)))
+    (enum_variant
+      (type_identifier)
+      (struct_field
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (struct_field
+        (identifier)
+        (named_type
+          (type_identifier))))))
+
+==================
+protocol with signature and default implementation
+==================
+
+protocol Display
+  fn display(self) -> String
+
+  fn shout(self) -> String
+    self.display()
+  end
+end
+
+---
+
+(source_file
+  (protocol_declaration
+    (type_identifier)
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier))))
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (method_call
+            (self_expression)
+            (identifier)
+            (argument_list)))))))
+
+==================
+impl protocol for target
+==================
+
+impl Display for Point
+  fn display(self) -> String
+    "Point(#{self.x}, #{self.y})"
+  end
+end
+
+---
+
+(source_file
+  (impl_block
+    (named_type
+      (type_identifier))
+    (named_type
+      (type_identifier))
+    (function_declaration
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (string
+            (interpolation
+              (field_access
+                (self_expression)
+                (identifier)))
+            (interpolation
+              (field_access
+                (self_expression)
+                (identifier)))))))))
+
+==================
+extend block
+==================
+
+extend Point
+  fn origin() -> Self
+    Point{x: 0, y: 0}
+  end
+end
+
+---
+
+(source_file
+  (extend_block
+    (named_type
+      (type_identifier))
+    (function_declaration
+      (identifier)
+      (parameters)
+      (return_type
+        (self_type))
+      (block
+        (expression_statement
+          (struct_construction
+            (named_type
+              (type_identifier))
+            (field_init
+              (identifier)
+              (integer))
+            (field_init
+              (identifier)
+              (integer))))))))
+
+==================
+const named by IDENT and TYPE_IDENT
+==================
+
+const MAX_SIZE: Int = 100
+const debug_mode = true
+
+---
+
+(source_file
+  (const_declaration
+    (type_identifier)
+    (named_type
+      (type_identifier))
+    (integer))
+  (const_declaration
+    (identifier)
+    (boolean)))
+
+==================
+union type alias
+==================
+
+type Pet = Cat | Dog | Fish
+
+---
+
+(source_file
+  (type_alias_declaration
+    (type_identifier)
+    (union_type
+      (named_type
+        (type_identifier))
+      (named_type
+        (type_identifier))
+      (named_type
+        (type_identifier)))))
+
+==================
+alias with rename
+==================
+
+alias Net.TCPSocket as Sock
+alias Crypto.SHA256
+
+---
+
+(source_file
+  (alias_declaration
+    (alias_path
+      (type_identifier)
+      (type_identifier))
+    (type_identifier))
+  (alias_declaration
+    (alias_path
+      (type_identifier)
+      (type_identifier))))

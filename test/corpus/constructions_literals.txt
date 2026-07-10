@@ -1,0 +1,210 @@
+==================
+struct construction inline and multiline
+==================
+
+fn f() -> Config
+  small = Point{x: 1, y: 2}
+
+  Config{
+    host: "localhost",
+    port: 8080,
+    retries: 3,
+  }
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (struct_construction
+          (named_type
+            (type_identifier))
+          (field_init
+            (identifier)
+            (integer))
+          (field_init
+            (identifier)
+            (integer))))
+      (expression_statement
+        (struct_construction
+          (named_type
+            (type_identifier))
+          (field_init
+            (identifier)
+            (string))
+          (field_init
+            (identifier)
+            (integer))
+          (field_init
+            (identifier)
+            (integer)))))))
+
+==================
+enum construction unit, tuple, and struct
+==================
+
+fn f() -> Shape
+  a: Option<Int> = Option.None
+  b = Option.Some(5)
+  Shape.Pixel{x: 1, y: 2}
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))
+        (enum_construction
+          (type_identifier)
+          (type_identifier)))
+      (assignment
+        (identifier)
+        (enum_construction
+          (type_identifier)
+          (type_identifier)
+          (integer)))
+      (expression_statement
+        (struct_construction
+          (named_type
+            (type_identifier)
+            (type_identifier))
+          (field_init
+            (identifier)
+            (integer))
+          (field_init
+            (identifier)
+            (integer)))))))
+
+==================
+list and map literals
+==================
+
+fn f() -> Int
+  numbers = [1, 2, 3]
+  empty_list = []
+  scores = ["alice": 10, "bob": 20]
+  empty_map = [:]
+  0
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (list
+          (integer)
+          (integer)
+          (integer)))
+      (assignment
+        (identifier)
+        (list))
+      (assignment
+        (identifier)
+        (map
+          (map_entry
+            (string)
+            (integer))
+          (map_entry
+            (string)
+            (integer))))
+      (assignment
+        (identifier)
+        (map))
+      (expression_statement
+        (integer)))))
+
+==================
+binary literal with segments
+==================
+
+fn f(payload: Binary) -> Binary
+  <<0xFF::8, payload, 7::16 big>>
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_literal
+          (binary_segment
+            (integer)
+            (integer))
+          (binary_segment
+            (identifier))
+          (binary_segment
+            (integer)
+            (integer)
+            (binary_modifier)))))))
+
+==================
+numeric literal forms
+==================
+
+fn f() -> Float
+  hex = 0xFF
+  bits = 0b1010
+  big = 1_000_000
+  3.14
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (integer))
+      (assignment
+        (identifier)
+        (integer))
+      (assignment
+        (identifier)
+        (integer))
+      (expression_statement
+        (float)))))

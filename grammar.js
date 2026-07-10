@@ -942,12 +942,19 @@ module.exports = grammar({
         "end",
       ),
 
+    // The dynamic precedence settles a real ambiguity: after an arm
+    // body, a line like `_ -> x` or `flag -> x` could also parse as a
+    // short-closure statement extending the previous body. Prefer the
+    // new-arm interpretation.
     match_arm: ($) =>
-      seq(
-        field("pattern", $.or_pattern),
-        optional(seq("when", field("guard", $._expression))),
-        "->",
-        field("body", $._match_body),
+      prec.dynamic(
+        1,
+        seq(
+          field("pattern", $.or_pattern),
+          optional(seq("when", field("guard", $._expression))),
+          "->",
+          field("body", $._match_body),
+        ),
       ),
 
     // The trailing newline between an arm body's last statement and
@@ -971,11 +978,16 @@ module.exports = grammar({
         "end",
       ),
 
+    // Same new-arm preference as `match_arm` for bare-identifier
+    // conditions (`flag -> x`).
     cond_arm: ($) =>
-      seq(
-        field("condition", $._expression),
-        "->",
-        field("body", $._match_body),
+      prec.dynamic(
+        1,
+        seq(
+          field("condition", $._expression),
+          "->",
+          field("body", $._match_body),
+        ),
       ),
 
     cond_else: ($) => seq("else", "->", field("body", $._match_body)),

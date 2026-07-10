@@ -1,0 +1,443 @@
+==================
+if with else
+==================
+
+fn f(x: Int) -> Int
+  if x > 0
+    x
+  else
+    -x
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (identifier)
+            (integer))
+          (block
+            (expression_statement
+              (identifier)))
+          (block
+            (expression_statement
+              (unary_expression
+                (identifier)))))))))
+
+==================
+unless
+==================
+
+fn f(list: List<Int>) -> Int
+  unless list.empty?()
+    process(list)
+  end
+
+  0
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (unless_expression
+          (method_call
+            (identifier)
+            (identifier)
+            (argument_list))
+          (block
+            (expression_statement
+              (call
+                (identifier)
+                (argument_list
+                  (argument
+                    (identifier))))))))
+      (expression_statement
+        (integer)))))
+
+==================
+while loop
+==================
+
+fn f(n: Int) -> Int
+  total = 0
+
+  while total < n
+    total += 1
+  end
+
+  total
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (integer))
+      (expression_statement
+        (while_expression
+          (binary_expression
+            (identifier)
+            (identifier))
+          (block
+            (compound_assignment
+              (identifier)
+              (integer)))))
+      (expression_statement
+        (identifier)))))
+
+==================
+loop with break
+==================
+
+fn f() -> Int
+  loop
+    break
+  end
+
+  1
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (loop_expression
+          (block
+            (break_statement))))
+      (expression_statement
+        (integer)))))
+
+==================
+for in
+==================
+
+fn f(items: List<Int>) -> Int
+  total = 0
+
+  for item in items
+    total += item
+  end
+
+  total
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (integer))
+      (expression_statement
+        (for_expression
+          (binding_pattern
+            (identifier))
+          (identifier)
+          (block
+            (compound_assignment
+              (identifier)
+              (identifier)))))
+      (expression_statement
+        (identifier)))))
+
+==================
+match with guard and multi-statement body
+==================
+
+fn f(x: Option<Int>) -> String
+  match x
+    Option.Some(v) when v > 5 -> "big"
+
+    Option.None ->
+      log("missing")
+      "none"
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (named_type
+            (type_identifier))
+          (type_arguments
+            (named_type
+              (type_identifier))))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (enum_pattern
+                (type_identifier)
+                (type_identifier)
+                (binding_pattern
+                  (identifier))))
+            (binary_expression
+              (identifier)
+              (integer))
+            (block
+              (expression_statement
+                (string))))
+          (match_arm
+            (or_pattern
+              (enum_pattern
+                (type_identifier)
+                (type_identifier)))
+            (block
+              (expression_statement
+                (call
+                  (identifier)
+                  (argument_list
+                    (argument
+                      (string)))))
+              (expression_statement
+                (string)))))))))
+
+==================
+match with or-pattern arm
+==================
+
+fn f(x: Int) -> String
+  match x
+    1 | 2 | 3 -> "small"
+    _ -> "big"
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_arm
+            (or_pattern
+              (integer)
+              (integer)
+              (integer))
+            (block
+              (expression_statement
+                (string))))
+          (match_arm
+            (or_pattern
+              (wildcard))
+            (block
+              (expression_statement
+                (string)))))))))
+
+==================
+cond with else
+==================
+
+fn f(n: Int) -> String
+  cond
+    n > 100 -> "big"
+    n > 10 -> "medium"
+    else -> "small"
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (cond_expression
+          (cond_arm
+            (binary_expression
+              (identifier)
+              (integer))
+            (block
+              (expression_statement
+                (string))))
+          (cond_arm
+            (binary_expression
+              (identifier)
+              (integer))
+            (block
+              (expression_statement
+                (string))))
+          (cond_else
+            (block
+              (expression_statement
+                (string)))))))))
+
+==================
+receive with after
+==================
+
+fn f(self) -> StopReason
+  receive
+    event: Lifecycle ->
+      StopReason.Shutdown
+  after 50
+    IO.puts("timed out")
+    StopReason.Normal
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (self_parameter))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (receive_expression
+          (match_arm
+            (or_pattern
+              (typed_binding_pattern
+                (identifier)
+                (named_type
+                  (type_identifier))))
+            (block
+              (expression_statement
+                (enum_construction
+                  (type_identifier)
+                  (type_identifier)))))
+          (integer)
+          (block
+            (expression_statement
+              (method_call
+                (type_identifier)
+                (identifier)
+                (argument_list
+                  (argument
+                    (string)))))
+            (expression_statement
+              (enum_construction
+                (type_identifier)
+                (type_identifier)))))))))
+
+==================
+spawn
+==================
+
+fn f(config: Config) -> Int
+  ref = spawn MyServer.start(config)
+  1
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (spawn_expression
+          (method_call
+            (type_identifier)
+            (identifier)
+            (argument_list
+              (argument
+                (identifier))))))
+      (expression_statement
+        (integer)))))
