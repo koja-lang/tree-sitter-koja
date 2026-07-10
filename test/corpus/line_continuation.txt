@@ -1,0 +1,169 @@
+==================
+leading and continuation in condition
+==================
+
+fn f(a: Bool, b: Bool, c: Bool) -> Int
+  if a and b
+    and c
+
+    1
+  else
+    2
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (binary_expression
+              (identifier)
+              (operator)
+              (identifier))
+            (operator)
+            (identifier))
+          (block
+            (expression_statement
+              (integer)))
+          (block
+            (expression_statement
+              (integer))))))))
+
+==================
+leading or continuation in statement position
+==================
+
+fn private_key?(text: String) -> Bool
+  text.contains?("BEGIN PRIVATE KEY")
+    or text.contains?("BEGIN RSA PRIVATE KEY")
+    or text.contains?("BEGIN EC PRIVATE KEY")
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (binary_expression
+            (method_call
+              (identifier)
+              (identifier)
+              (argument_list
+                (argument
+                  (string))))
+            (operator)
+            (method_call
+              (identifier)
+              (identifier)
+              (argument_list
+                (argument
+                  (string)))))
+          (operator)
+          (method_call
+            (identifier)
+            (identifier)
+            (argument_list
+              (argument
+                (string)))))))))
+
+==================
+trailing operator continuation still parses
+==================
+
+fn f(a: Bool, b: Bool) -> Bool
+  a and
+    b
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (identifier)
+          (operator)
+          (identifier))))))
+
+==================
+line starting with and-prefixed identifier is a new statement
+==================
+
+fn f(x: Int) -> Int
+  a = x
+  and_more = a
+  or_else(and_more)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (identifier))
+      (assignment
+        (identifier)
+        (identifier))
+      (expression_statement
+        (call
+          (identifier)
+          (argument_list
+            (argument
+              (identifier))))))))

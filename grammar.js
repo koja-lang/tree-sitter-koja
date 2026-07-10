@@ -137,6 +137,10 @@ module.exports = grammar({
     // method-call interpretation; lookahead beyond the path picks.
     [$.named_type, $._primary_expr],
     [$.named_type, $._primary_expr, $._enum_construction_path],
+    // In patterns, a `.` after a path segment either extends the
+    // path or introduces the variant (`Process.StopReason.Normal`).
+    // The self-conflict lets GLR explore both split points.
+    [$._enum_construction_path],
   ],
 
   supertypes: ($) => [
@@ -218,9 +222,14 @@ module.exports = grammar({
     // 3. Struct
     // ====================================================================
 
+    // The name accepts a dotted path (`struct Process.CrashInfo`) for
+    // types nested under an owning type. Owner segments get their own
+    // field so `name:` queries keep capturing the declared leaf.
     struct_declaration: ($) =>
       seq(
+        optional("priv"),
         "struct",
+        repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
         optional($._newline),
@@ -248,9 +257,12 @@ module.exports = grammar({
     // 4. Enum
     // ====================================================================
 
+    // Same dotted-path naming as `struct_declaration` (`enum File.Mode`).
     enum_declaration: ($) =>
       seq(
+        optional("priv"),
         "enum",
+        repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
         optional($._newline),
@@ -295,6 +307,7 @@ module.exports = grammar({
 
     protocol_declaration: ($) =>
       seq(
+        optional("priv"),
         "protocol",
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
@@ -495,6 +508,7 @@ module.exports = grammar({
 
     const_declaration: ($) =>
       seq(
+        optional("priv"),
         "const",
         field("name", choice($.identifier, $.type_identifier)),
         optional(seq(":", field("type", $._type_expression))),
@@ -504,6 +518,7 @@ module.exports = grammar({
 
     type_alias_declaration: ($) =>
       seq(
+        optional("priv"),
         "type",
         field("name", $.type_identifier),
         "=",
@@ -878,10 +893,12 @@ module.exports = grammar({
     // No outer precedence: we only want this interpretation when the
     // input is actually `Type(.Type)+ . Variant` for an
     // enum_construction; in `List.new()` we want the same prefix to
-    // reduce as a `_primary_expr` instead. We do need `prec.left` so
-    // the path itself associates left when it does match.
+    // reduce as a `_primary_expr` instead. No static associativity
+    // either: at each `.` the path can extend or stop so the next
+    // segment becomes the variant (`Process.StopReason.Normal`). The
+    // conflicts list lets GLR explore both split points.
     _enum_construction_path: ($) =>
-      prec.left(seq($.type_identifier, repeat(seq(".", $.type_identifier)))),
+      seq($.type_identifier, repeat(seq(".", $.type_identifier))),
 
     // ====================================================================
     // 13. Closures
