@@ -1,0 +1,68 @@
+==================
+script-style top-level statements
+==================
+
+x = 42
+name = "koja"
+IO.puts("hello #{name}")
+
+---
+
+(source_file
+  (assignment
+    (identifier)
+    (integer))
+  (assignment
+    (identifier)
+    (string))
+  (expression_statement
+    (method_call
+      (type_identifier)
+      (identifier)
+      (argument_list
+        (argument
+          (string
+            (interpolation
+              (identifier))))))))
+
+==================
+script mixing statements and declarations
+==================
+
+fn double(x: Int) -> Int
+  x * 2
+end
+
+result = double(21)
+result.print()
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (identifier)
+          (integer)))))
+  (assignment
+    (identifier)
+    (call
+      (identifier)
+      (argument_list
+        (argument
+          (integer)))))
+  (expression_statement
+    (method_call
+      (identifier)
+      (identifier)
+      (argument_list))))

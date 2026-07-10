@@ -4,8 +4,9 @@
 //   _newline            significant statement terminator
 //   _line_continuation  zero-width token emitted instead of _newline when
 //                       the next line starts with `.` / `?` / `:` (method
-//                       chain or ternary continuation); discarded by the
-//                       grammar via `extras`
+//                       chain or ternary continuation) or the word `and` /
+//                       `or` (wrapped boolean chain). The grammar discards
+//                       it via `extras`.
 //   _string_content     a non-empty run of regular characters inside "..."
 //   _mstring_content    a non-empty run of regular characters inside """..."""
 //   _string_close       closing `"` of a single-line string
@@ -55,11 +56,43 @@ void tree_sitter_koja_external_scanner_deserialize(void *payload, const char *bu
 static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 static inline void skip(TSLexer *lexer) { lexer->advance(lexer, true); }
 
-// Consume any number of newlines surrounded by whitespace and `#` line
-// comments. When `valid_symbols[NEWLINE]` is true and we saw at least one
-// `\n`, emit the NEWLINE token; otherwise the newlines are silently
-// dropped (treated as whitespace) and we fall through to the default
-// tokenizer.
+// True if `c` can continue an identifier (`and_more`, `or_else`, `and?`).
+static inline bool is_ident_char(int32_t c) {
+  return iswalnum(c) || c == '_' || c == '?' || c == '!';
+}
+
+// True if the lexer sits at the word `and` or `or` at a word boundary.
+// Advances the lexer past the match. The caller must have already called
+// mark_end so the consumed characters stay lookahead-only.
+static bool peek_leading_bool_operator(TSLexer *lexer) {
+  if (lexer->lookahead == 'o') {
+    advance(lexer);
+    if (lexer->lookahead != 'r') return false;
+    advance(lexer);
+    return !is_ident_char(lexer->lookahead);
+  }
+  if (lexer->lookahead == 'a') {
+    advance(lexer);
+    if (lexer->lookahead != 'n') return false;
+    advance(lexer);
+    if (lexer->lookahead != 'd') return false;
+    advance(lexer);
+    return !is_ident_char(lexer->lookahead);
+  }
+  return false;
+}
+
+// Consume any number of newlines surrounded by whitespace. When
+// `valid_symbols[NEWLINE]` is true and we saw at least one `\n`, emit the
+// NEWLINE token; otherwise the newlines are silently dropped (treated as
+// whitespace) and we fall through to the default tokenizer.
+//
+// A comment line does not terminate a statement by itself, and the
+// terminator must be emitted after the last comment so a run of comment
+// lines separates two statements with exactly one NEWLINE. When the scan
+// lands on `#` we therefore emit a zero-width LINE_CONTINUATION (an
+// extra the grammar discards), let the internal lexer surface the
+// comment as a `comment` node, and resume the newline scan afterwards.
 static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
   bool saw_newline = false;
   for (;;) {
@@ -71,8 +104,14 @@ static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
       saw_newline = true;
       continue;
     }
-    if (lexer->lookahead == '#') {
-      // Comment: consume to end of line, then loop to absorb the `\n`.
+    if (lexer->lookahead == '#' && saw_newline) {
+      if (valid_symbols[LINE_CONTINUATION]) {
+        lexer->mark_end(lexer);
+        lexer->result_symbol = LINE_CONTINUATION;
+        return true;
+      }
+      // No room for the extra at this state, so absorb the comment the
+      // way the pre-0.2.0 scanner always did and keep scanning.
       while (lexer->lookahead != 0 && lexer->lookahead != '\n') {
         skip(lexer);
       }
@@ -83,24 +122,28 @@ static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
   if (!saw_newline) {
     return false;
   }
-  // Mirror koja-lexer's lookahead suppression: a line that starts with
-  // `.` continues a method chain, and `?` / `:` continue a ternary
-  // (`cond\n  ? a\n  : b`). No statement or expression can *begin* with
-  // those characters, so the newline is whitespace. We can't just return
-  // false here -- tree-sitter would then re-lex from the bare `\n`, which
-  // the internal lexer can't skip -- so we emit a zero-width
-  // LINE_CONTINUATION token that the grammar discards via `extras`.
-  if (lexer->lookahead == '.' || lexer->lookahead == '?' || lexer->lookahead == ':') {
+  // Both outcomes below are zero-width tokens ending here, before any
+  // lookahead peeking past the line start.
+  lexer->mark_end(lexer);
+  // Mirror the reference parser's continuation lookahead: a line that
+  // starts with `.` continues a method chain, `?` / `:` continue a
+  // ternary (`cond\n  ? a\n  : b`), and the word `and` / `or` continues
+  // a wrapped boolean chain. No statement can *begin* with those, so the
+  // newline is whitespace. We can't just return false here, because
+  // tree-sitter would then re-lex from the bare `\n`, which the internal
+  // lexer can't skip. Instead we emit a zero-width LINE_CONTINUATION
+  // token that the grammar discards via `extras`.
+  bool continues = lexer->lookahead == '.' || lexer->lookahead == '?' ||
+                   lexer->lookahead == ':' || peek_leading_bool_operator(lexer);
+  if (continues) {
     if (valid_symbols[LINE_CONTINUATION]) {
       lexer->result_symbol = LINE_CONTINUATION;
-      lexer->mark_end(lexer);
       return true;
     }
     return false;
   }
   if (valid_symbols[NEWLINE]) {
     lexer->result_symbol = NEWLINE;
-    lexer->mark_end(lexer);
     return true;
   }
   return false;

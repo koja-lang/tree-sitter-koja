@@ -1,0 +1,38 @@
+priv const MAX_RETRIES: Int = 3
+# <- keyword
+#    ^ keyword
+#          ^ constant
+#                       ^ type
+
+priv struct Config
+# <- keyword
+#    ^ keyword
+#           ^ type.definition
+  host: String
+  # <- property
+end
+
+extend Config
+# <- keyword
+  @doc "Checks the configured host."
+  # <- attribute
+  fn check?(self, limit: Int) -> Bool
+  # <- keyword
+  #  ^ function
+  #          ^ variable.builtin
+  #                ^ variable.parameter
+    limit > 0 and self.host.contains?("x")
+    #         ^ keyword
+    #                  ^ property
+    #                       ^ function.method
+  end
+  # <- keyword
+end
+
+fn greet(name: String) -> String
+# <- keyword
+#  ^ function
+  "hello #{name}!"
+  # <- string
+  #      ^ punctuation.special
+end

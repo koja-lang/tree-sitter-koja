@@ -1,0 +1,121 @@
+==================
+string escapes
+==================
+
+fn f() -> String
+  "line one\nline \"two\"\t\\"
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (string
+          (escape)
+          (escape)
+          (escape)
+          (escape)
+          (escape))))))
+
+==================
+interpolation with format spec
+==================
+
+fn f(name: String, count: Int) -> String
+  "hello #{name}, you have #{count:>8} messages"
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (string
+          (interpolation
+            (identifier))
+          (interpolation
+            (identifier)
+            (format_spec)))))))
+
+==================
+multiline string with interpolation
+==================
+
+fn f(host: String) -> String
+  """
+  GET / HTTP/1.1
+  Host: #{host}
+  """
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (multiline_string
+          (interpolation
+            (identifier)))))))
+
+==================
+comment versus interpolation
+==================
+
+# A leading comment mentions #{interpolation} harmlessly.
+fn f(x: Int) -> String
+  # bare comment
+  "#{x}" # trailing comment
+end
+
+---
+
+(source_file
+  (comment)
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (comment)
+    (block
+      (expression_statement
+        (string
+          (interpolation
+            (identifier))))
+      (comment))))

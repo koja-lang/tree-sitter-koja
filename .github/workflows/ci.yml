@@ -18,3 +18,22 @@ jobs:
       - uses: actions/checkout@v6
       - name: Prettier check
         run: npx prettier@latest --check .
+
+  grammar:
+    name: Grammar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install tree-sitter-cli
+        run: npm ci
+      - name: Check generated parser is up to date
+        run: |
+          npx tree-sitter generate
+          git diff --exit-code -- src
+      - name: Corpus tests
+        run: npx tree-sitter test

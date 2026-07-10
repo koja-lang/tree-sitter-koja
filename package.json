@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-koja",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Tree-sitter grammar for the Koja programming language",
   "keywords": [
     "parser",

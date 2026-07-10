@@ -1,0 +1,280 @@
+==================
+operator precedence layers
+==================
+
+fn f(a: Int, b: Int, c: Int, d: Int, e: Bool) -> Bool
+  a + b * c == d and e
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (binary_expression
+            (binary_expression
+              (identifier)
+              (binary_expression
+                (identifier)
+                (identifier)))
+            (identifier))
+          (operator)
+          (identifier))))))
+
+==================
+unary operators
+==================
+
+fn f(x: Int, flag: Bool) -> Bool
+  y = -x
+  not flag
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (unary_expression
+          (identifier)))
+      (expression_statement
+        (unary_expression
+          (identifier))))))
+
+==================
+string concat operator
+==================
+
+fn f(a: String, b: String) -> String
+  a <> ", " <> b
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (binary_expression
+            (identifier)
+            (string))
+          (identifier))))))
+
+==================
+ternary inline
+==================
+
+fn f(x: Int) -> String
+  x > 0 ? "pos" : "neg"
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (ternary_expression
+          (binary_expression
+            (identifier)
+            (integer))
+          (string)
+          (string))))))
+
+==================
+ternary wrapped with leading operators
+==================
+
+fn f(x: Int) -> String
+  x > 0
+    ? "pos"
+    : "neg"
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (ternary_expression
+          (binary_expression
+            (identifier)
+            (integer))
+          (string)
+          (string))))))
+
+==================
+method chain with leading-dot continuation
+==================
+
+fn f(text: String) -> String
+  text
+    .trim()
+    .downcase()
+    .replace("a", "b")
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (method_call
+          (method_call
+            (method_call
+              (identifier)
+              (identifier)
+              (argument_list))
+            (identifier)
+            (argument_list))
+          (identifier)
+          (argument_list
+            (argument
+              (string))
+            (argument
+              (string))))))))
+
+==================
+field access and method call
+==================
+
+fn f(p: Point) -> Int
+  p.x + p.distance()
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (field_access
+            (identifier)
+            (identifier))
+          (method_call
+            (identifier)
+            (identifier)
+            (argument_list)))))))
+
+==================
+static call on type
+==================
+
+fn f() -> List<Int>
+  List.new()
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters)
+    (return_type
+      (generic_type
+        (named_type
+          (type_identifier))
+        (type_arguments
+          (named_type
+            (type_identifier)))))
+    (block
+      (expression_statement
+        (method_call
+          (type_identifier)
+          (identifier)
+          (argument_list))))))

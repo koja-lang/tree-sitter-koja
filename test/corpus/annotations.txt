@@ -1,0 +1,199 @@
+==================
+doc annotation with single-line string
+==================
+
+@doc "Adds two integers."
+fn add(a: Int, b: Int) -> Int
+  a + b
+end
+
+---
+
+(source_file
+  (annotated_declaration
+    (annotation
+      (identifier)
+      (string))
+    (function_declaration
+      (identifier)
+      (parameters
+        (parameter
+          (identifier)
+          (named_type
+            (type_identifier)))
+        (parameter
+          (identifier)
+          (named_type
+            (type_identifier))))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (binary_expression
+            (identifier)
+            (identifier)))))))
+
+==================
+doc annotation with multiline string
+==================
+
+@doc """
+Returns `true` if both strings have the same content.
+"""
+fn eq?(a: String, b: String) -> Bool
+  a == b
+end
+
+---
+
+(source_file
+  (annotated_declaration
+    (annotation
+      (identifier)
+      (multiline_string))
+    (function_declaration
+      (identifier)
+      (parameters
+        (parameter
+          (identifier)
+          (named_type
+            (type_identifier)))
+        (parameter
+          (identifier)
+          (named_type
+            (type_identifier))))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (binary_expression
+            (identifier)
+            (identifier)))))))
+
+==================
+stacked annotations on separate lines
+==================
+
+extend String
+  @doc "Low-level hash entry point."
+  @intrinsic
+  fn hash(self) -> Int
+end
+
+---
+
+(source_file
+  (extend_block
+    (named_type
+      (type_identifier))
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (annotation
+        (identifier))
+      (extern_function_declaration
+        (identifier)
+        (parameters
+          (self_parameter))
+        (return_type
+          (named_type
+            (type_identifier)))))))
+
+==================
+inline annotations
+==================
+
+struct FFI
+  @link "argon2" @extern "C"
+  fn argon2_hash(cost: Int32) -> Int32
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (annotation
+        (identifier)
+        (string))
+      (extern_function_declaration
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier))))
+        (return_type
+          (named_type
+            (type_identifier)))))))
+
+==================
+doc false suppresses documentation
+==================
+
+@doc false
+fn internal_helper() -> Int
+  42
+end
+
+---
+
+(source_file
+  (annotated_declaration
+    (annotation
+      (identifier))
+    (function_declaration
+      (identifier)
+      (parameters)
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (integer))))))
+
+==================
+test annotation on function
+==================
+
+struct URITest
+  @test "parses a full absolute URI"
+  fn parse_full(self) -> Result<(), String>
+    Result.Ok(())
+  end
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (function_declaration
+        (identifier)
+        (parameters
+          (self_parameter))
+        (return_type
+          (generic_type
+            (named_type
+              (type_identifier))
+            (type_arguments
+              (unit_type)
+              (named_type
+                (type_identifier)))))
+        (block
+          (expression_statement
+            (enum_construction
+              (type_identifier)
+              (type_identifier)
+              (unit_literal))))))))

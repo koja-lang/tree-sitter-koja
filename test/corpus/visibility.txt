@@ -1,0 +1,180 @@
+==================
+priv struct
+==================
+
+priv struct Point
+  x: Int
+  y: Int
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))))
+
+==================
+priv enum
+==================
+
+priv enum Color
+  Red
+  Green
+end
+
+---
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier))))
+
+==================
+priv protocol
+==================
+
+priv protocol Display
+  fn display(self) -> String
+end
+
+---
+
+(source_file
+  (protocol_declaration
+    (type_identifier)
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier))))))
+
+==================
+priv const
+==================
+
+priv const MAX_SIZE: Int = 100
+
+---
+
+(source_file
+  (const_declaration
+    (type_identifier)
+    (named_type
+      (type_identifier))
+    (integer)))
+
+==================
+priv type alias
+==================
+
+priv type Score = Int
+
+---
+
+(source_file
+  (type_alias_declaration
+    (type_identifier)
+    (named_type
+      (type_identifier))))
+
+==================
+priv function
+==================
+
+priv fn helper(x: Int) -> Int
+  x
+end
+
+---
+
+(source_file
+  (priv_function
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (identifier)))))
+
+==================
+annotated priv extern function
+==================
+
+struct FFI
+  @extern "C"
+  priv fn add_numbers(a: Int32, b: Int32) -> Int32
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (extern_function_declaration
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier)))
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier))))
+        (return_type
+          (named_type
+            (type_identifier)))))))
+
+==================
+nested type declaration names
+==================
+
+struct Process.CrashInfo
+  message: String
+end
+
+priv enum File.Mode
+  Read
+  Write
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (type_identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier))))
+  (enum_declaration
+    (type_identifier)
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier))))
