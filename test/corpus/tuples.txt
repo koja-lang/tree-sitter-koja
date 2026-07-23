@@ -1,0 +1,173 @@
+==================
+tuple literal
+==================
+
+t = (1, "two")
+
+---
+
+(source_file
+  (assignment
+    (identifier)
+    (tuple
+      (integer)
+      (string))))
+
+==================
+nested tuple literal
+==================
+
+t = (1, (2.5, false))
+
+---
+
+(source_file
+  (assignment
+    (identifier)
+    (tuple
+      (integer)
+      (tuple
+        (float)
+        (boolean)))))
+
+==================
+single element parens stay grouping
+==================
+
+x = (1)
+
+---
+
+(source_file
+  (assignment
+    (identifier)
+    (parenthesized_expression
+      (integer))))
+
+==================
+tuple type annotation
+==================
+
+fn f(entry: (Int, String)) -> (Int, String)
+  entry
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (tuple_type
+          (named_type
+            (type_identifier))
+          (named_type
+            (type_identifier)))))
+    (return_type
+      (tuple_type
+        (named_type
+          (type_identifier))
+        (named_type
+          (type_identifier))))
+    (block
+      (expression_statement
+        (identifier)))))
+
+==================
+tuple in union type
+==================
+
+fn f(x: (Int, String) | NotFound) -> Int
+  0
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (union_type
+          (tuple_type
+            (named_type
+              (type_identifier))
+            (named_type
+              (type_identifier)))
+          (named_type
+            (type_identifier)))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (integer)))))
+
+==================
+tuple destructuring assignment
+==================
+
+(a, _, (b, c)) = f()
+
+---
+
+(source_file
+  (assignment
+    (tuple_binding
+      (identifier)
+      (wildcard)
+      (tuple_binding
+        (identifier)
+        (identifier)))
+    (call
+      (identifier)
+      (argument_list))))
+
+==================
+tuple match patterns
+==================
+
+match point
+  (0, 0) -> "origin"
+  (x, _) when x > 0 -> "right"
+  (_, y) -> "left"
+end
+
+---
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_arm
+        (or_pattern
+          (tuple_pattern
+            (integer)
+            (integer)))
+        (block
+          (expression_statement
+            (string))))
+      (match_arm
+        (or_pattern
+          (tuple_pattern
+            (binding_pattern
+              (identifier))
+            (wildcard)))
+        (binary_expression
+          (identifier)
+          (integer))
+        (block
+          (expression_statement
+            (string))))
+      (match_arm
+        (or_pattern
+          (tuple_pattern
+            (wildcard)
+            (binding_pattern
+              (identifier))))
+        (block
+          (expression_statement
+            (string)))))))
