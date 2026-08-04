@@ -1,0 +1,132 @@
+==================
+nested struct in struct body
+==================
+
+struct Owner
+  x: Int
+
+  struct Nested
+    y: Int
+  end
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))
+    (struct_declaration
+      (type_identifier)
+      (struct_field
+        (identifier)
+        (named_type
+          (type_identifier))))))
+
+==================
+nested enum in struct body with priv
+==================
+
+struct Owner
+  priv enum Kind
+    Alpha
+    Beta(Int)
+  end
+
+  fn double(self) -> Int
+    self.x * 2
+  end
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (enum_declaration
+      (type_identifier)
+      (enum_variant
+        (type_identifier))
+      (enum_variant
+        (type_identifier)
+        (named_type
+          (type_identifier))))
+    (function_declaration
+      (identifier)
+      (parameters
+        (self_parameter))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (binary_expression
+            (field_access
+              (self_expression)
+              (identifier))
+            (integer)))))))
+
+==================
+annotated nested struct in enum body
+==================
+
+enum Tree
+  Leaf
+  Node(Int)
+
+  @doc "Metadata attached to every node."
+  struct Meta
+    depth: Int
+  end
+end
+
+---
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)
+      (named_type
+        (type_identifier)))
+    (annotated_declaration
+      (annotation
+        (identifier)
+        (string))
+      (struct_declaration
+        (type_identifier)
+        (struct_field
+          (identifier)
+          (named_type
+            (type_identifier)))))))
+
+==================
+nested declarations three deep
+==================
+
+struct A
+  struct B
+    struct C
+      x: Int
+    end
+  end
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (struct_declaration
+      (type_identifier)
+      (struct_declaration
+        (type_identifier)
+        (struct_field
+          (identifier)
+          (named_type
+            (type_identifier)))))))

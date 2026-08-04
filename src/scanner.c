@@ -5,8 +5,8 @@
 //   _line_continuation  zero-width token emitted instead of _newline when
 //                       the next line starts with `.` / `?` / `:` (method
 //                       chain or ternary continuation) or the word `and` /
-//                       `or` (wrapped boolean chain). The grammar discards
-//                       it via `extras`.
+//                       `or` / `rescue` (wrapped boolean chain or rescue
+//                       tail). The grammar discards it via `extras`.
 //   _string_content     a non-empty run of regular characters inside "..."
 //   _mstring_content    a non-empty run of regular characters inside """..."""
 //   _string_close       closing `"` of a single-line string
@@ -61,25 +61,29 @@ static inline bool is_ident_char(int32_t c) {
   return iswalnum(c) || c == '_' || c == '?' || c == '!';
 }
 
-// True if the lexer sits at the word `and` or `or` at a word boundary.
-// Advances the lexer past the match. The caller must have already called
-// mark_end so the consumed characters stay lookahead-only.
-static bool peek_leading_bool_operator(TSLexer *lexer) {
-  if (lexer->lookahead == 'o') {
+// True if the lexer sits at `word` at a word boundary. Advances past the
+// match. The caller must have already called mark_end so the consumed
+// characters stay lookahead-only.
+static bool peek_word(TSLexer *lexer, const char *word) {
+  for (const char *c = word; *c != 0; c++) {
+    if (lexer->lookahead != (int32_t)*c) return false;
     advance(lexer);
-    if (lexer->lookahead != 'r') return false;
-    advance(lexer);
-    return !is_ident_char(lexer->lookahead);
   }
-  if (lexer->lookahead == 'a') {
-    advance(lexer);
-    if (lexer->lookahead != 'n') return false;
-    advance(lexer);
-    if (lexer->lookahead != 'd') return false;
-    advance(lexer);
-    return !is_ident_char(lexer->lookahead);
+  return !is_ident_char(lexer->lookahead);
+}
+
+// True if the lexer sits at a line-continuation word (`and`, `or`, `rescue`).
+static bool peek_leading_continuation_word(TSLexer *lexer) {
+  switch (lexer->lookahead) {
+    case 'a':
+      return peek_word(lexer, "and");
+    case 'o':
+      return peek_word(lexer, "or");
+    case 'r':
+      return peek_word(lexer, "rescue");
+    default:
+      return false;
   }
-  return false;
 }
 
 // Consume any number of newlines surrounded by whitespace. When
@@ -127,14 +131,16 @@ static bool scan_newline(TSLexer *lexer, const bool *valid_symbols) {
   lexer->mark_end(lexer);
   // Mirror the reference parser's continuation lookahead: a line that
   // starts with `.` continues a method chain, `?` / `:` continue a
-  // ternary (`cond\n  ? a\n  : b`), and the word `and` / `or` continues
-  // a wrapped boolean chain. No statement can *begin* with those, so the
-  // newline is whitespace. We can't just return false here, because
-  // tree-sitter would then re-lex from the bare `\n`, which the internal
-  // lexer can't skip. Instead we emit a zero-width LINE_CONTINUATION
-  // token that the grammar discards via `extras`.
+  // ternary (`cond\n  ? a\n  : b`), and the words `and` / `or` /
+  // `rescue` continue a wrapped boolean chain or rescue tail. No
+  // statement can *begin* with those, so the newline is whitespace. We
+  // can't just return false here, because tree-sitter would then
+  // re-lex from the bare `\n`, which the internal lexer can't skip.
+  // Instead we emit a zero-width LINE_CONTINUATION token that the
+  // grammar discards via `extras`.
   bool continues = lexer->lookahead == '.' || lexer->lookahead == '?' ||
-                   lexer->lookahead == ':' || peek_leading_bool_operator(lexer);
+                   lexer->lookahead == ':' ||
+                   peek_leading_continuation_word(lexer);
   if (continues) {
     if (valid_symbols[LINE_CONTINUATION]) {
       lexer->result_symbol = LINE_CONTINUATION;

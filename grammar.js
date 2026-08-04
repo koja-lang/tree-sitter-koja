@@ -18,6 +18,7 @@
  */
 
 const PREC = {
+  rescue: 0,
   ternary: 1,
   arrow: 2,
   or: 3,
@@ -43,6 +44,7 @@ const RESERVED = [
   "end",
   "enum",
   "extend",
+  "fail",
   "false",
   "fn",
   "for",
@@ -55,11 +57,13 @@ const RESERVED = [
   "priv",
   "protocol",
   "receive",
+  "rescue",
   "return",
   "self",
   "spawn",
   "struct",
   "true",
+  "try",
   "type",
   "unless",
   "when",
@@ -117,8 +121,15 @@ module.exports = grammar({
     [$.parameters, $.unit_literal],
     [$._closure_params_short, $.unit_literal],
     [$._closure_params_short, $.unit_type],
+    [$.unit_type, $.unit_literal],
     [$.parameter, $.closure_param],
     [$.closure_param, $._primary_expr],
+    // `(_,` or `(x,` could open a short-closure parameter list, a
+    // tuple destructuring target, or a tuple literal. Lookahead past
+    // the closing paren (`->` vs `=` vs neither) settles it.
+    [$.closure_param, $._tuple_binding_element],
+    [$.closure_param, $._tuple_binding_element, $._primary_expr],
+    [$._tuple_binding_element, $._primary_expr],
     // Bodyless `@extern` / `@intrinsic` declarations overlap with
     // their full-body counterparts until an `end` clarifies. The
     // dynamic precedences (`+10` on full forms, `-10` on extern)
@@ -237,11 +248,15 @@ module.exports = grammar({
         "end",
       ),
 
+    // Nested type declarations are sugar for the dotted-path
+    // top-level form.
     _struct_member: ($) =>
       choice(
         $.struct_field,
         $.function_declaration,
         $.priv_function,
+        $.struct_declaration,
+        $.enum_declaration,
         $.annotated_declaration,
       ),
 
@@ -275,6 +290,8 @@ module.exports = grammar({
         $.enum_variant,
         $.function_declaration,
         $.priv_function,
+        $.struct_declaration,
+        $.enum_declaration,
         $.annotated_declaration,
       ),
 
@@ -400,6 +417,9 @@ module.exports = grammar({
 
     return_type: ($) => seq("->", $._type_expression),
 
+    // `! E` error channel in a signature. Bare `! E` means a unit success.
+    error_type: ($) => seq("!", $._type_expression),
+
     // Dynamic precedence: when a parenthesised header on a function
     // declaration could either bind as parameters or as the start of a
     // body expression (parenthesised_expression / short_closure /
@@ -450,6 +470,7 @@ module.exports = grammar({
         $.generic_type,
         $.named_type,
         $.self_type,
+        $.tuple_type,
         $.unit_type,
       ),
 
@@ -489,6 +510,18 @@ module.exports = grammar({
       prec.left(seq($.type_identifier, repeat(seq(".", $.type_identifier)))),
 
     self_type: ($) => "Self",
+
+    // Anonymous tuple type, arity 2+. `()` is unit and `(T)` is not
+    // a type, so at least one comma is required.
+    tuple_type: ($) =>
+      seq(
+        "(",
+        optional($._newline),
+        $._type_expression,
+        repeat1(seq(",", optional($._newline), $._type_expression)),
+        optional($._newline),
+        ")",
+      ),
 
     unit_type: ($) => seq("(", ")"),
 
@@ -598,6 +631,15 @@ module.exports = grammar({
             field("value", $._expression),
           ),
         ),
+        // Tuple destructuring: `(a, b) = expr`. Elements are
+        // irrefutable per the reference parser: bindings, wildcards,
+        // and nested tuples only.
+        seq(
+          field("target", $.tuple_binding),
+          "=",
+          optional($._newline),
+          field("value", $._expression),
+        ),
       ),
 
     compound_assignment: ($) =>
@@ -610,18 +652,52 @@ module.exports = grammar({
 
     _lvalue: ($) => choice($.identifier, $.field_access, "self"),
 
+    tuple_binding: ($) =>
+      seq(
+        "(",
+        optional($._newline),
+        $._tuple_binding_element,
+        repeat1(seq(",", optional($._newline), $._tuple_binding_element)),
+        optional($._newline),
+        ")",
+      ),
+
+    _tuple_binding_element: ($) =>
+      choice($.identifier, $.wildcard, $.tuple_binding),
+
     // ====================================================================
     // 11. Expressions (precedence climbing matches koja-parser)
     // ====================================================================
 
     _expression: ($) =>
       choice(
+        $.rescue_expression,
         $.short_closure,
         $.ternary_expression,
         $.binary_expression,
         $.unary_expression,
+        $.try_expression,
         $._postfix_expr,
       ),
+
+    // `expr rescue e -> handler`. Binds loosest and chains left. The
+    // scanner suppresses the newline before a line-leading `rescue`.
+    rescue_expression: ($) =>
+      prec.left(
+        PREC.rescue,
+        seq(
+          field("subject", $._expression),
+          "rescue",
+          field("binder", choice($.identifier, $.wildcard)),
+          "->",
+          optional($._newline),
+          field("handler", $._expression),
+        ),
+      ),
+
+    // `try expr` is a prefix operator at unary precedence, like `-`.
+    try_expression: ($) =>
+      prec(PREC.unary, seq("try", field("expression", $._expression))),
 
     // Short closure: `params -> body`. Body is a full expression.
     short_closure: ($) =>
@@ -815,6 +891,7 @@ module.exports = grammar({
         $.self_expression,
         $.struct_construction,
         $.enum_construction,
+        $.tuple,
         $.parenthesized_expression,
         $.unit_literal,
         $.closure,
@@ -827,12 +904,25 @@ module.exports = grammar({
         $.while_expression,
         $.receive_expression,
         $.spawn_expression,
+        $.fail_expression,
       ),
 
     self_expression: ($) => "self",
 
     parenthesized_expression: ($) =>
       seq("(", optional($._newline), $._expression, optional($._newline), ")"),
+
+    // Anonymous tuple literal, arity 2+. `(x)` stays a
+    // parenthesized_expression; the comma is what makes a tuple.
+    tuple: ($) =>
+      seq(
+        "(",
+        optional($._newline),
+        $._expression,
+        repeat1(seq(",", optional($._newline), $._expression)),
+        optional($._newline),
+        ")",
+      ),
 
     unit_literal: ($) => seq("(", ")"),
 
@@ -1025,6 +1115,10 @@ module.exports = grammar({
     spawn_expression: ($) =>
       prec.right(seq("spawn", field("expression", $._expression))),
 
+    // `fail expr` parses as a primary, like the EBNF's `fail_expr`.
+    fail_expression: ($) =>
+      prec.right(seq("fail", field("expression", $._expression))),
+
     // ====================================================================
     // 15. Patterns
     // ====================================================================
@@ -1040,6 +1134,7 @@ module.exports = grammar({
         $.struct_pattern,
         $.constructor_pattern,
         $.list_pattern,
+        $.tuple_pattern,
         $.binary_pattern,
         $.unit_literal,
       ),
@@ -1116,6 +1211,16 @@ module.exports = grammar({
         optional(commaSep1(optional($._newline), $._pattern)),
         optional($._newline),
         "]",
+      ),
+
+    tuple_pattern: ($) =>
+      seq(
+        "(",
+        optional($._newline),
+        $._pattern,
+        repeat1(seq(",", optional($._newline), $._pattern)),
+        optional($._newline),
+        ")",
       ),
 
     field_pattern: ($) =>
@@ -1261,16 +1366,16 @@ module.exports = grammar({
 // Grammar helpers
 // ─────────────────────────────────────────────────────────────────────
 
-// `fn name[<T>][(p)] [-> R]` — the prefix shared by every function-
-// like declaration form (function_declaration, priv_function,
-// extern_function_declaration, protocol_method). Returns an array of
-// grammar fragments meant to be spread into the calling `seq(...)`
-// call so the resulting state machine is flat (nested `seq` nodes
-// can confuse tree-sitter's GLR exploration).
+// `fn name[<T>][(p)] [-> R] [! E]` — the prefix shared by every
+// function-like declaration form (function_declaration,
+// priv_function, extern_function_declaration, protocol_method).
+// Returns an array of grammar fragments meant to be spread into the
+// calling `seq(...)` call so the resulting state machine is flat
+// (nested `seq` nodes can confuse tree-sitter's GLR exploration).
 //
-// The optional newline between `(...)` and `->` mirrors the
-// reference lexer's `continues_line` rule (see koja-lexer) and lets
-// long signatures wrap before the return arrow.
+// The optional newline between `(...)` and `->` / `!` mirrors the
+// reference parser's newline skip before the return signature and
+// lets long signatures wrap. No newline between `-> T` and `! E`.
 function fnHeader($) {
   return [
     "fn",
@@ -1279,6 +1384,7 @@ function fnHeader($) {
     optional(field("parameters", $.parameters)),
     optional($._newline),
     optional(field("return_type", $.return_type)),
+    optional(field("error_type", $.error_type)),
   ];
 }
 
