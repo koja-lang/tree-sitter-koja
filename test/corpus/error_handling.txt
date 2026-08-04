@@ -1,0 +1,314 @@
+==================
+fallible function signature
+==================
+
+fn parse_port(raw: String) -> Int ! ParseError
+  1
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (integer)))))
+
+==================
+union error signature
+==================
+
+fn fetch(url: String) -> Limits ! SocketError | ParseError
+  run(url)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (error_type
+      (union_type
+        (named_type
+          (type_identifier))
+        (named_type
+          (type_identifier))))
+    (block
+      (expression_statement
+        (call
+          (identifier)
+          (argument_list
+            (argument
+              (identifier))))))))
+
+==================
+bare error signature declares a unit success
+==================
+
+fn ping(host: String) ! String
+  send(host)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (call
+          (identifier)
+          (argument_list
+            (argument
+              (identifier))))))))
+
+==================
+bare error signature wraps onto a continuation line
+==================
+
+priv fn validate(bytes: Binary, start: Int)
+  ! URIError
+
+  1
+end
+
+---
+
+(source_file
+  (priv_function
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (integer)))))
+
+==================
+protocol method with bare error signature
+==================
+
+protocol Store
+  fn flush(self) ! StoreError
+end
+
+---
+
+(source_file
+  (protocol_declaration
+    (type_identifier)
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter))
+      (error_type
+        (named_type
+          (type_identifier))))))
+
+==================
+try prefix expression
+==================
+
+fn quarter(n: Int) -> Int ! MyError
+  h = try half(n)
+  try half(h)
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (try_expression
+          (call
+            (identifier)
+            (argument_list
+              (argument
+                (identifier))))))
+      (expression_statement
+        (try_expression
+          (call
+            (identifier)
+            (argument_list
+              (argument
+                (identifier)))))))))
+
+==================
+fail statement
+==================
+
+fn half(n: Int) -> Int ! MyError
+  if n < 2
+    fail MyError.TooSmall(n)
+  end
+
+  n / 2
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (identifier)
+            (integer))
+          (block
+            (expression_statement
+              (fail_expression
+                (enum_construction
+                  (type_identifier)
+                  (type_identifier)
+                  (identifier)))))))
+      (expression_statement
+        (binary_expression
+          (identifier)
+          (integer))))))
+
+==================
+inline rescue expression
+==================
+
+fn read(s: String) -> Int
+  parse(s) rescue _ -> 0
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (rescue_expression
+          (call
+            (identifier)
+            (argument_list
+              (argument
+                (identifier))))
+          (wildcard)
+          (integer))))))
+
+==================
+rescue tail on a continuation line
+==================
+
+fn connect(config: Config) -> Connection ! Error
+  socket = TCPSocket.connect(config.host)
+    rescue e -> fail Error.ConnectFailed(e.message())
+
+  socket
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (error_type
+      (named_type
+        (type_identifier)))
+    (block
+      (assignment
+        (identifier)
+        (rescue_expression
+          (method_call
+            (type_identifier)
+            (identifier)
+            (argument_list
+              (argument
+                (field_access
+                  (identifier)
+                  (identifier)))))
+          (identifier)
+          (fail_expression
+            (enum_construction
+              (type_identifier)
+              (type_identifier)
+              (method_call
+                (identifier)
+                (identifier)
+                (argument_list))))))
+      (expression_statement
+        (identifier)))))

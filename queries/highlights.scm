@@ -46,14 +46,17 @@
 [
   "cond"
   "else"
+  "fail"
   "for"
   "if"
   "in"
   "loop"
   "match"
   "receive"
+  "rescue"
   "return"
   "spawn"
+  "try"
   "unless"
   "when"
   "while"
@@ -143,6 +146,9 @@
 
 ; Function-pointer type keyword
 (function_type "fn" @keyword)
+
+; The `!` error channel separator in signatures
+(error_type "!" @operator)
 
 ; ---------------------------------------------------------------------------
 ; Functions

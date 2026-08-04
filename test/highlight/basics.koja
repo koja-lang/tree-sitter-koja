@@ -36,3 +36,22 @@ fn greet(name: String) -> String
   # <- string
   #      ^ punctuation.special
 end
+
+fn load(path: String) -> Config ! LoadError | String
+# <- keyword
+#                               ^ operator
+#                                 ^ type
+#                                           ^ operator
+  config = try read(path)
+  #        ^ keyword
+  #            ^ function.call
+  config
+end
+
+fn store(config: Config) ! String
+#                        ^ operator
+  written = save(config) rescue _ -> fail "cannot save"
+  #                      ^ keyword
+  #                                  ^ keyword
+  written
+end
