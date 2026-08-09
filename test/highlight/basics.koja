@@ -55,3 +55,18 @@ fn store(config: Config) ! String
   #                                  ^ keyword
   written
 end
+
+builtin Duration
+# <- keyword
+#       ^ type.definition
+  @intrinsic
+  fn millis(self) -> Int
+end
+
+struct App: Greeter, Description
+# <- keyword
+#      ^ type.definition
+#           ^ type
+#                    ^ type
+  name: String
+end

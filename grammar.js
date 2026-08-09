@@ -38,6 +38,7 @@ const RESERVED = [
   "alias",
   "as",
   "break",
+  "builtin",
   "cond",
   "const",
   "else",
@@ -184,6 +185,7 @@ module.exports = grammar({
       choice(
         $.struct_declaration,
         $.enum_declaration,
+        $.builtin_declaration,
         $.protocol_declaration,
         $.impl_block,
         $.extend_block,
@@ -205,6 +207,7 @@ module.exports = grammar({
         choice(
           $.struct_declaration,
           $.enum_declaration,
+          $.builtin_declaration,
           $.protocol_declaration,
           $.function_declaration,
           $.priv_function,
@@ -243,9 +246,19 @@ module.exports = grammar({
         repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
+        optional(seq(":", field("conformances", $.conformance_list))),
         optional($._newline),
         repeat(seq($._struct_member, optional($._newline))),
         "end",
+      ),
+
+    // Header conformance list: `struct App: Process<C, M, R>, Debug`.
+    // The listed protocols are satisfied by the type body's functions.
+    conformance_list: ($) =>
+      seq(
+        optional($._newline),
+        $._type_expression,
+        repeat(seq(",", optional($._newline), $._type_expression)),
       ),
 
     // Nested type declarations are sugar for the dotted-path
@@ -280,6 +293,7 @@ module.exports = grammar({
         repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
+        optional(seq(":", field("conformances", $.conformance_list))),
         optional($._newline),
         repeat(seq($._enum_member, optional($._newline))),
         "end",
@@ -319,7 +333,27 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 5. Protocol
+    // 5. Builtin
+    // ====================================================================
+
+    // Compiler-owned types (`builtin String ... end`). Always public;
+    // the body admits only functions.
+    builtin_declaration: ($) =>
+      seq(
+        "builtin",
+        repeat(seq(field("owner", $.type_identifier), ".")),
+        field("name", $.type_identifier),
+        optional(field("type_parameters", $.type_parameters)),
+        optional($._newline),
+        repeat(seq($._builtin_member, optional($._newline))),
+        "end",
+      ),
+
+    _builtin_member: ($) =>
+      choice($.function_declaration, $.priv_function, $.annotated_declaration),
+
+    // ====================================================================
+    // 6. Protocol
     // ====================================================================
 
     protocol_declaration: ($) =>
@@ -360,7 +394,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 6. Impl and Extend
+    // 7. Impl and Extend
     // ====================================================================
 
     // `impl Trait for Target` — protocol conformance only. Bare
@@ -395,7 +429,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 7. Function
+    // 8. Function
     // ====================================================================
 
     // Public function with a body. `prec.dynamic(10)` makes this
@@ -454,7 +488,7 @@ module.exports = grammar({
     self_parameter: ($) => prec(2, "self"),
 
     // ====================================================================
-    // 8. Type expressions
+    // 9. Type expressions
     // ====================================================================
 
     _type_expression: ($) => choice($.union_type, $._primary_type),
@@ -536,7 +570,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 9. Top-level / impl-level declarations: const, alias, type
+    // 10. Top-level / impl-level declarations: const, alias, type
     // ====================================================================
 
     const_declaration: ($) =>
@@ -572,7 +606,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 10. Block / statements
+    // 11. Block / statements
     // ====================================================================
 
     // A block is one or more statements separated by newlines, with
@@ -666,7 +700,7 @@ module.exports = grammar({
       choice($.identifier, $.wildcard, $.tuple_binding),
 
     // ====================================================================
-    // 11. Expressions (precedence climbing matches koja-parser)
+    // 12. Expressions (precedence climbing matches koja-parser)
     // ====================================================================
 
     _expression: ($) =>
@@ -927,7 +961,7 @@ module.exports = grammar({
     unit_literal: ($) => seq("(", ")"),
 
     // ====================================================================
-    // 12. Constructions
+    // 13. Constructions
     // ====================================================================
 
     struct_construction: ($) =>
@@ -991,7 +1025,7 @@ module.exports = grammar({
       seq($.type_identifier, repeat(seq(".", $.type_identifier))),
 
     // ====================================================================
-    // 13. Closures
+    // 14. Closures
     // ====================================================================
 
     closure: ($) =>
@@ -1008,7 +1042,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 14. Control flow
+    // 15. Control flow
     // ====================================================================
 
     if_expression: ($) =>
@@ -1120,7 +1154,7 @@ module.exports = grammar({
       prec.right(seq("fail", field("expression", $._expression))),
 
     // ====================================================================
-    // 15. Patterns
+    // 16. Patterns
     // ====================================================================
 
     _pattern: ($) =>
@@ -1227,7 +1261,7 @@ module.exports = grammar({
       seq(field("name", $.identifier), ":", field("pattern", $._pattern)),
 
     // ====================================================================
-    // 16. Binary / bitstring literals
+    // 17. Binary / bitstring literals
     // ====================================================================
 
     binary_literal: ($) =>
@@ -1272,7 +1306,7 @@ module.exports = grammar({
     binary_modifier: ($) => choice("signed", "unsigned", "big", "little"),
 
     // ====================================================================
-    // 17. Literals
+    // 18. Literals
     // ====================================================================
 
     _literal: ($) =>
@@ -1318,7 +1352,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 18. Strings
+    // 19. Strings
     // ====================================================================
 
     string: ($) =>
@@ -1346,7 +1380,7 @@ module.exports = grammar({
       ),
 
     // ====================================================================
-    // 19. Lexical
+    // 20. Lexical
     // ====================================================================
 
     identifier: ($) => token(IDENT),
