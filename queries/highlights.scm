@@ -32,6 +32,7 @@
 [
   "alias"
   "as"
+  "builtin"
   "const"
   "enum"
   "extend"
@@ -141,6 +142,7 @@
 
 (struct_declaration name: (type_identifier) @type.definition)
 (enum_declaration name: (type_identifier) @type.definition)
+(builtin_declaration name: (type_identifier) @type.definition)
 (protocol_declaration name: (type_identifier) @type.definition)
 (enum_variant name: (type_identifier) @constructor)
 

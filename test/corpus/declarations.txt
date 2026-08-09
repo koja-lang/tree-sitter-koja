@@ -2,9 +2,9 @@
 struct with defaults and generics
 ==================
 
-struct Pair<A, B>
-  first: A
-  second: B
+struct Entry<K, V>
+  key: K
+  value: V
   tag: Int = 0
 end
 
@@ -70,6 +70,121 @@ end
         (identifier)
         (named_type
           (type_identifier))))))
+
+==================
+struct with conformance header
+==================
+
+struct App: Process<C, M, R>, Debug
+  port: Int
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (conformance_list
+      (generic_type
+        (named_type
+          (type_identifier))
+        (type_arguments
+          (named_type
+            (type_identifier))
+          (named_type
+            (type_identifier))
+          (named_type
+            (type_identifier))))
+      (named_type
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))))
+
+==================
+struct with wrapped conformance list
+==================
+
+struct Server:
+  Greeter,
+  Description
+
+  name: String
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (conformance_list
+      (named_type
+        (type_identifier))
+      (named_type
+        (type_identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))))
+
+==================
+enum with conformance header
+==================
+
+enum Color: Display, Koja.Task
+  Red
+  Green
+end
+
+---
+
+(source_file
+  (enum_declaration
+    (type_identifier)
+    (conformance_list
+      (named_type
+        (type_identifier))
+      (named_type
+        (type_identifier)
+        (type_identifier)))
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier))))
+
+==================
+builtin declarations
+==================
+
+builtin String
+end
+
+builtin Set<T>
+  @intrinsic
+  fn size(self) -> Int
+end
+
+---
+
+(source_file
+  (builtin_declaration
+    (type_identifier))
+  (builtin_declaration
+    (type_identifier)
+    (type_parameters
+      (type_parameter
+        (type_identifier)))
+    (annotated_declaration
+      (annotation
+        (identifier))
+      (extern_function_declaration
+        (identifier)
+        (parameters
+          (self_parameter))
+        (return_type
+          (named_type
+            (type_identifier)))))))
 
 ==================
 protocol with signature and default implementation
