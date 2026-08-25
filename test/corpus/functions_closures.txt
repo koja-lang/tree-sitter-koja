@@ -140,6 +140,30 @@ end
             (type_identifier)))))))
 
 ==================
+named function reference
+==================
+
+f = &double/1
+g = &Point.translate/3
+
+---
+
+(source_file
+  (assignment
+    target: (identifier)
+    value: (function_reference
+      path: (function_ref_path
+        (identifier))
+      arity: (integer)))
+  (assignment
+    target: (identifier)
+    value: (function_reference
+      path: (function_ref_path
+        (type_identifier)
+        (identifier))
+      arity: (integer))))
+
+==================
 block closure with return type
 ==================
 

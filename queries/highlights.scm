@@ -164,6 +164,8 @@
 (call callee: (identifier) @function.call)
 (method_call method: (identifier) @function.method)
 
+(function_reference) @function
+
 ; ---------------------------------------------------------------------------
 ; Variables, parameters, fields
 ; ---------------------------------------------------------------------------

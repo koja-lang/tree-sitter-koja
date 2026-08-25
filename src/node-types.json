@@ -158,6 +158,10 @@
         "named": true
       },
       {
+        "type": "function_reference",
+        "named": true
+      },
+      {
         "type": "identifier",
         "named": true
       },
@@ -1720,6 +1724,51 @@
         "types": [
           {
             "type": "type_parameters",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "function_ref_path",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "type_identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_reference",
+    "named": true,
+    "fields": {
+      "arity": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "integer",
+            "named": true
+          }
+        ]
+      },
+      "path": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "function_ref_path",
             "named": true
           }
         ]
