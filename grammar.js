@@ -923,6 +923,7 @@ module.exports = grammar({
         $.identifier,
         $.type_identifier,
         $.self_expression,
+        $.function_reference,
         $.struct_construction,
         $.enum_construction,
         $.tuple,
@@ -942,6 +943,17 @@ module.exports = grammar({
       ),
 
     self_expression: ($) => "self",
+
+    function_reference: ($) =>
+      seq(
+        "&",
+        field("path", $.function_ref_path),
+        "/",
+        field("arity", $.integer),
+      ),
+
+    function_ref_path: ($) =>
+      sepBy1(".", choice($.identifier, $.type_identifier)),
 
     parenthesized_expression: ($) =>
       seq("(", optional($._newline), $._expression, optional($._newline), ")"),
