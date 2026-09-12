@@ -218,10 +218,6 @@
         "named": true
       },
       {
-        "type": "unless_expression",
-        "named": true
-      },
-      {
         "type": "while_expression",
         "named": true
       }
@@ -3140,32 +3136,6 @@
     "fields": {}
   },
   {
-    "type": "unless_expression",
-    "named": true,
-    "fields": {
-      "body": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "block",
-            "named": true
-          }
-        ]
-      },
-      "condition": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "_expression",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "while_expression",
     "named": true,
     "fields": {
@@ -3510,10 +3480,6 @@
   {
     "type": "type_identifier",
     "named": true
-  },
-  {
-    "type": "unless",
-    "named": false
   },
   {
     "type": "unsigned",
