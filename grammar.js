@@ -37,6 +37,7 @@ const RESERVED = [
   "after",
   "alias",
   "as",
+  "assert",
   "break",
   "builtin",
   "cond",
@@ -63,6 +64,7 @@ const RESERVED = [
   "self",
   "spawn",
   "struct",
+  "test",
   "true",
   "try",
   "type",
@@ -191,6 +193,7 @@ module.exports = grammar({
         $.extend_block,
         $.function_declaration,
         $.priv_function,
+        $.test_declaration,
         $.const_declaration,
         $.type_alias_declaration,
         $.alias_declaration,
@@ -261,15 +264,18 @@ module.exports = grammar({
         repeat(seq(",", optional($._newline), $._type_expression)),
       ),
 
-    // Nested type declarations are sugar for the dotted-path
-    // top-level form.
+    // Nested type, protocol, and constant declarations are sugar for
+    // the dotted-path top-level form.
     _struct_member: ($) =>
       choice(
         $.struct_field,
         $.function_declaration,
         $.priv_function,
+        $.test_declaration,
+        $.const_declaration,
         $.struct_declaration,
         $.enum_declaration,
+        $.protocol_declaration,
         $.annotated_declaration,
       ),
 
@@ -304,8 +310,11 @@ module.exports = grammar({
         $.enum_variant,
         $.function_declaration,
         $.priv_function,
+        $.test_declaration,
+        $.const_declaration,
         $.struct_declaration,
         $.enum_declaration,
+        $.protocol_declaration,
         $.annotated_declaration,
       ),
 
@@ -337,7 +346,7 @@ module.exports = grammar({
     // ====================================================================
 
     // Compiler-owned types (`builtin String ... end`). Always public;
-    // the body admits only functions.
+    // the body admits functions, tests, and constants.
     builtin_declaration: ($) =>
       seq(
         "builtin",
@@ -350,16 +359,25 @@ module.exports = grammar({
       ),
 
     _builtin_member: ($) =>
-      choice($.function_declaration, $.priv_function, $.annotated_declaration),
+      choice(
+        $.function_declaration,
+        $.priv_function,
+        $.test_declaration,
+        $.const_declaration,
+        $.annotated_declaration,
+      ),
 
     // ====================================================================
     // 6. Protocol
     // ====================================================================
 
+    // Same dotted-path naming as `struct_declaration` (`protocol
+    // Date.Format`). A protocol can also sit inside the owner's body.
     protocol_declaration: ($) =>
       seq(
         optional("priv"),
         "protocol",
+        repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", $.type_identifier),
         optional(field("type_parameters", $.type_parameters)),
         optional($._newline),
@@ -424,9 +442,16 @@ module.exports = grammar({
       choice(
         $.function_declaration,
         $.priv_function,
+        $.test_declaration,
         $.type_alias_declaration,
         $.annotated_declaration,
       ),
+
+    // `test "description" ... end`. The body has no parameters and
+    // fails through `assert` or `fail`. Allowed at the top level and
+    // inside any type body, where the enclosing type is the suite.
+    test_declaration: ($) =>
+      seq("test", field("description", $.string), ...blockBody($), "end"),
 
     // ====================================================================
     // 8. Function
@@ -535,10 +560,23 @@ module.exports = grammar({
       seq(
         "<",
         optional($._newline),
-        commaSep1(optional($._newline), $._type_expression),
+        commaSep1(
+          optional($._newline),
+          choice(
+            $._type_expression,
+            alias($._bounded_type_argument, $.type_parameter),
+          ),
+        ),
         optional($._newline),
         ">",
       ),
+
+    // `impl Equality for List<T: Equality>` introduces `T` with a
+    // bound in the target's argument list. Only an impl target admits
+    // this, but the grammar accepts it in any argument list and
+    // leaves the check to the compiler.
+    _bounded_type_argument: ($) =>
+      seq(field("name", $.type_identifier), ":", field("bounds", $._bounds)),
 
     named_type: ($) =>
       prec.left(seq($.type_identifier, repeat(seq(".", $.type_identifier)))),
@@ -566,17 +604,24 @@ module.exports = grammar({
     type_parameter: ($) =>
       seq(
         field("name", $.type_identifier),
-        optional(seq(":", field("bounds", sepBy1("&", $.type_identifier)))),
+        optional(seq(":", field("bounds", $._bounds))),
       ),
+
+    // A bound is a protocol, which can be nested (`T: Date.Format`)
+    // or generic (`T: Process<M>`).
+    _bounds: ($) => sepBy1("&", $._primary_type),
 
     // ====================================================================
     // 10. Top-level / impl-level declarations: const, alias, type
     // ====================================================================
 
+    // The name takes an owner path (`const Duration.ZERO = ...`) for a
+    // constant nested under a type, the same as `struct_declaration`.
     const_declaration: ($) =>
       seq(
         optional("priv"),
         "const",
+        repeat(seq(field("owner", $.type_identifier), ".")),
         field("name", choice($.identifier, $.type_identifier)),
         optional(seq(":", field("type", $._type_expression))),
         "=",
@@ -592,11 +637,18 @@ module.exports = grammar({
         field("type", $._type_expression),
       ),
 
+    // The path names a type, a package-level function, or a constant,
+    // so the local name follows the case of what it binds.
     alias_declaration: ($) =>
       seq(
         "alias",
         field("path", $.alias_path),
-        optional(seq("as", field("local_name", $.type_identifier))),
+        optional(
+          seq(
+            "as",
+            field("local_name", choice($.identifier, $.type_identifier)),
+          ),
+        ),
       ),
 
     alias_path: ($) =>
@@ -628,6 +680,7 @@ module.exports = grammar({
       choice(
         $.return_statement,
         $.break_statement,
+        $.assert_statement,
         $.compound_assignment,
         $.assignment,
         $.expression_statement,
@@ -639,6 +692,16 @@ module.exports = grammar({
       prec.right(seq("return", optional(field("value", $._expression)))),
 
     break_statement: ($) => "break",
+
+    // `assert cond` or `assert cond, "message"` inside a test body.
+    assert_statement: ($) =>
+      prec.right(
+        seq(
+          "assert",
+          field("condition", $._expression),
+          optional(seq(",", field("message", $._expression))),
+        ),
+      ),
 
     // Newlines after `=`/`+=`/etc are line continuations (mirroring
     // the lexer's `continues_line` rule), so we accept an optional
