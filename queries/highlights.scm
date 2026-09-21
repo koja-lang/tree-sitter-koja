@@ -58,7 +58,6 @@
   "return"
   "spawn"
   "try"
-  "unless"
   "when"
   "while"
   "after"

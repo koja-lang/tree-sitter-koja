@@ -931,7 +931,6 @@ module.exports = grammar({
         $.unit_literal,
         $.closure,
         $.if_expression,
-        $.unless_expression,
         $.match_expression,
         $.cond_expression,
         $.for_expression,
@@ -1065,9 +1064,6 @@ module.exports = grammar({
         optional(seq("else", ...blockBody($, "else"))),
         "end",
       ),
-
-    unless_expression: ($) =>
-      seq("unless", field("condition", $._expression), ...blockBody($), "end"),
 
     match_expression: ($) =>
       seq(

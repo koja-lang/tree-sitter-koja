@@ -38,52 +38,6 @@ end
                 (identifier)))))))))
 
 ==================
-unless
-==================
-
-fn f(list: List<Int>) -> Int
-  unless list.empty?()
-    process(list)
-  end
-
-  0
-end
-
----
-
-(source_file
-  (function_declaration
-    (identifier)
-    (parameters
-      (parameter
-        (identifier)
-        (generic_type
-          (named_type
-            (type_identifier))
-          (type_arguments
-            (named_type
-              (type_identifier))))))
-    (return_type
-      (named_type
-        (type_identifier)))
-    (block
-      (expression_statement
-        (unless_expression
-          (method_call
-            (identifier)
-            (identifier)
-            (argument_list))
-          (block
-            (expression_statement
-              (call
-                (identifier)
-                (argument_list
-                  (argument
-                    (identifier))))))))
-      (expression_statement
-        (integer)))))
-
-==================
 while loop
 ==================
 
