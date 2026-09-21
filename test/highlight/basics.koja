@@ -70,3 +70,19 @@ struct App: Greeter, Description
 #                    ^ type
   name: String
 end
+
+alias Net.resolve as lookup
+# <- keyword
+#     ^ type
+#         ^ function
+#                 ^ keyword
+#                    ^ function
+
+test "greets by name"
+# <- keyword
+#    ^ string
+  assert greet("ada") == "hello ada!", "greeting"
+  # <- keyword
+  #      ^ function.call
+  #                                    ^ string
+end

@@ -351,3 +351,139 @@ alias Crypto.SHA256
     (alias_path
       (type_identifier)
       (type_identifier))))
+
+==================
+alias of a package function and constant
+==================
+
+alias JSON.decode
+alias JSON.decode as dec
+alias Pkg.DEFAULT_PORT as PORT
+
+---
+
+(source_file
+  (alias_declaration
+    (alias_path
+      (type_identifier)
+      (identifier)))
+  (alias_declaration
+    (alias_path
+      (type_identifier)
+      (identifier))
+    (identifier))
+  (alias_declaration
+    (alias_path
+      (type_identifier)
+      (type_identifier))
+    (type_identifier)))
+
+==================
+qualified const and protocol at top level
+==================
+
+const Duration.ZERO: Duration = Duration{micros: 0}
+
+protocol Date.Format
+  fn write(self, date: Date) -> String
+end
+
+---
+
+(source_file
+  (const_declaration
+    (type_identifier)
+    (type_identifier)
+    (named_type
+      (type_identifier))
+    (struct_construction
+      (named_type
+        (type_identifier))
+      (field_init
+        (identifier)
+        (integer))))
+  (protocol_declaration
+    (type_identifier)
+    (type_identifier)
+    (protocol_method
+      (identifier)
+      (parameters
+        (self_parameter)
+        (parameter
+          (identifier)
+          (named_type
+            (type_identifier))))
+      (return_type
+        (named_type
+          (type_identifier))))))
+
+==================
+nested and generic trait bounds
+==================
+
+fn encode<T: JSON.Encoding & Debug>(body: T) -> String
+  body.to_string()
+end
+
+impl Equality for List<T: Equality>
+  fn equals?(self, other: List<T>) -> Bool
+    true
+  end
+end
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (type_parameters
+      (type_parameter
+        (type_identifier)
+        (named_type
+          (type_identifier)
+          (type_identifier))
+        (named_type
+          (type_identifier))))
+    (parameters
+      (parameter
+        (identifier)
+        (named_type
+          (type_identifier))))
+    (return_type
+      (named_type
+        (type_identifier)))
+    (block
+      (expression_statement
+        (method_call
+          (identifier)
+          (identifier)
+          (argument_list)))))
+  (impl_block
+    (named_type
+      (type_identifier))
+    (generic_type
+      (named_type
+        (type_identifier))
+      (type_arguments
+        (type_parameter
+          (type_identifier)
+          (named_type
+            (type_identifier)))))
+    (function_declaration
+      (identifier)
+      (parameters
+        (self_parameter)
+        (parameter
+          (identifier)
+          (generic_type
+            (named_type
+              (type_identifier))
+            (type_arguments
+              (named_type
+                (type_identifier))))))
+      (return_type
+        (named_type
+          (type_identifier)))
+      (block
+        (expression_statement
+          (boolean))))))

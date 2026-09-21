@@ -41,10 +41,12 @@
   "priv"
   "protocol"
   "struct"
+  "test"
   "type"
 ] @keyword
 
 [
+  "assert"
   "cond"
   "else"
   "fail"
@@ -164,6 +166,11 @@
 (method_call method: (identifier) @function.method)
 
 (function_reference) @function
+
+; `alias Test.require as req` binds a package function. The last path
+; segment is the function and the local name takes its case.
+(alias_path (identifier) @function .)
+(alias_declaration local_name: (identifier) @function)
 
 ; ---------------------------------------------------------------------------
 ; Variables, parameters, fields

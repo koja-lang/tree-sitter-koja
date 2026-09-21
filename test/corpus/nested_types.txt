@@ -130,3 +130,73 @@ end
           (identifier)
           (named_type
             (type_identifier)))))))
+
+==================
+nested const and protocol in type bodies
+==================
+
+struct Date
+  day: Int
+
+  protocol Format
+    fn write(self, date: Date) -> String
+  end
+
+  const UNIX_EPOCH = Date{day: 1}
+end
+
+enum Level
+  Low
+  const DEFAULT = Level.Low
+end
+
+builtin Int
+  const MAX: Int = 9
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (type_identifier)))
+    (protocol_declaration
+      (type_identifier)
+      (protocol_method
+        (identifier)
+        (parameters
+          (self_parameter)
+          (parameter
+            (identifier)
+            (named_type
+              (type_identifier))))
+        (return_type
+          (named_type
+            (type_identifier)))))
+    (const_declaration
+      (type_identifier)
+      (struct_construction
+        (named_type
+          (type_identifier))
+        (field_init
+          (identifier)
+          (integer)))))
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (const_declaration
+      (type_identifier)
+      (enum_construction
+        (type_identifier)
+        (type_identifier))))
+  (builtin_declaration
+    (type_identifier)
+    (const_declaration
+      (type_identifier)
+      (named_type
+        (type_identifier))
+      (integer))))

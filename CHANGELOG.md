@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `test_declaration` for the `test "description" ... end` block, at the top level and inside `struct`, `enum`, `builtin`, `impl`, and `extend` bodies.
+- `assert_statement` for `assert cond` and `assert cond, "message"`, with `condition` and `message` fields.
+- `const_declaration` and `protocol_declaration` inside a `struct`, `enum`, or `builtin` body, and qualified names at the top level (`const Duration.ZERO = ...`, `protocol Date.Format`). The owner segments use the `owner` field like nested types do.
+- `alias` of a package function or constant. The local name after `as` can be an `identifier`, and the highlight query captures the function segment and its local name as `@function`.
+- `test` and `assert` highlight as keywords.
+
+### Fixed
+
+- Trait bounds accept a nested or generic protocol (`fn encode<T: JSON.Encoding>`). A bound is now a type node instead of a bare `type_identifier`.
+- `impl Equality for List<T: Equality>` parses. A type argument list accepts a bounded `type_parameter`.
+
 ### Removed
 
 - The `unless_expression` node and `unless` keyword, removed from the language in Koja 0.19. Write `if not cond` instead.
@@ -66,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial public release, tracking Koja 0.12.0 syntax.
 
-[unreleased]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/koja-lang/tree-sitter-koja/compare/v0.1.1...v0.2.0

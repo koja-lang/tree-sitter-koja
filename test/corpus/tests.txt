@@ -1,0 +1,140 @@
+==================
+top-level test with assert
+==================
+
+test "pops in reverse order"
+  stack = Stack.new().push(1)
+  assert stack.pop() == Option.Some(1)
+end
+
+---
+
+(source_file
+  (test_declaration
+    (string)
+    (block
+      (assignment
+        (identifier)
+        (method_call
+          (method_call
+            (type_identifier)
+            (identifier)
+            (argument_list))
+          (identifier)
+          (argument_list
+            (argument
+              (integer)))))
+      (assert_statement
+        (binary_expression
+          (method_call
+            (identifier)
+            (identifier)
+            (argument_list))
+          (enum_construction
+            (type_identifier)
+            (type_identifier)
+            (integer)))))))
+
+==================
+assert with message and bare assert
+==================
+
+test "routes"
+  assert Router.route("/health") == "health", "health route"
+  assert true
+end
+
+---
+
+(source_file
+  (test_declaration
+    (string)
+    (block
+      (assert_statement
+        (binary_expression
+          (method_call
+            (type_identifier)
+            (identifier)
+            (argument_list
+              (argument
+                (string))))
+          (string))
+        (string))
+      (assert_statement
+        (boolean)))))
+
+==================
+empty test body
+==================
+
+test "todo"
+end
+
+---
+
+(source_file
+  (test_declaration
+    (string)))
+
+==================
+test inside struct, impl, and extend bodies
+==================
+
+struct Stack
+  test "starts empty"
+    assert Stack.new().empty?()
+  end
+end
+
+impl Debug for Stack
+  test "debug output"
+    assert true
+  end
+end
+
+extend Stack
+  test "extended"
+    try Test.require(1)
+  end
+end
+
+---
+
+(source_file
+  (struct_declaration
+    (type_identifier)
+    (test_declaration
+      (string)
+      (block
+        (assert_statement
+          (method_call
+            (method_call
+              (type_identifier)
+              (identifier)
+              (argument_list))
+            (identifier)
+            (argument_list))))))
+  (impl_block
+    (named_type
+      (type_identifier))
+    (named_type
+      (type_identifier))
+    (test_declaration
+      (string)
+      (block
+        (assert_statement
+          (boolean)))))
+  (extend_block
+    (named_type
+      (type_identifier))
+    (test_declaration
+      (string)
+      (block
+        (expression_statement
+          (try_expression
+            (method_call
+              (type_identifier)
+              (identifier)
+              (argument_list
+                (argument
+                  (integer))))))))))

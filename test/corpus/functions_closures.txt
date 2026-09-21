@@ -14,8 +14,10 @@ end
     (type_parameters
       (type_parameter
         (type_identifier)
-        (type_identifier)
-        (type_identifier)))
+        (named_type
+          (type_identifier))
+        (named_type
+          (type_identifier))))
     (parameters
       (parameter
         (identifier)
